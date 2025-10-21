@@ -47,7 +47,10 @@ function SyorModal({ isOpen, onClose, title, syorList, status }: SyorModalProps)
                   <div 
                     key={syor.id} 
                     className="bg-slate-700/30 border border-slate-600 rounded-lg p-4 hover:bg-slate-600/30 transition-colors cursor-pointer"
-                    onClick={() => window.open(`/syor/${syor.id}`, '_blank')}
+                    onClick={() => {
+                      onClose(); // Close modal first
+                      window.location.href = `/syor/${syor.id}`; // Same tab navigation
+                    }}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
