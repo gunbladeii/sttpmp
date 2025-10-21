@@ -1,0 +1,422 @@
+﻿'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/useAuthSimple'
+import { supabase } from '@/lib/supabase'
+import DashboardHeader from '@/components/DashboardHeader'
+
+interface Department {
+  id: string
+  name: string
+  code: string
+}
+
+interface JPN {
+  id: string
+  name: string
+  state: string
+}
+
+export default function CreateSyorPage() {
+  const router = useRouter()
+  const { user } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [jpns, setJpns] = useState<JPN[]>([])
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  const [formData, setFormData] = useState({
+    title: '',
+    syor_content: '',
+    assigned_to_department: '',
+    assigned_to_jpn: '',
+    priority: 'sederhana' as const,
+    pemeriksaan_type: 'mata_pelajaran' as const,
+    due_date: '',
+    response_deadline: ''
+  })
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
+    if (user.role !== 'peneraju_pemeriksaan') {
+      router.push('/dashboard')
+      return
+    }
+  }, [user, router])
+
+  useEffect(() => {
+    async function fetchOptions() {
+      try {
+        const { data: deptData, error: deptError } = await supabase
+          .from('departments')
+          .select('id, name, code')
+          .order('name')
+
+        if (deptError) throw deptError
+
+        const { data: jpnData, error: jpnError } = await supabase
+          .from('jpn')
+          .select('id, name, state')
+          .order('name')
+
+        if (jpnError) throw jpnError
+
+        setDepartments(deptData || [])
+        setJpns(jpnData || [])
+      } catch (err) {
+        console.error('Error fetching options:', err)
+        setError('Gagal memuat senarai bahagian dan JPN')
+      }
+    }
+
+    fetchOptions()
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user) return
+
+    setLoading(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      if (!formData.title.trim()) {
+        throw new Error('Tajuk syor diperlukan')
+      }
+      
+      if (!formData.syor_content.trim()) {
+        throw new Error('Kandungan syor diperlukan')
+      }
+      
+      if (!formData.assigned_to_department && !formData.assigned_to_jpn) {
+        throw new Error('Sila pilih sama ada Bahagian atau JPN')
+      }
+      if (formData.assigned_to_department && formData.assigned_to_jpn) {
+        throw new Error('Sila pilih sama ada Bahagian atau JPN sahaja, bukan kedua-duanya')
+      }
+      if (!formData.due_date) {
+        throw new Error('Tarikh akhir diperlukan')
+      }
+      if (!formData.response_deadline) {
+        throw new Error('Tarikh akhir maklum balas diperlukan')
+      }
+
+      const syorData = {
+        title: formData.title.trim(),
+        description: formData.syor_content.trim(),
+        priority: formData.priority,
+        pemeriksaan_type: formData.pemeriksaan_type,
+        due_date: formData.due_date,
+        response_deadline: formData.response_deadline,
+        created_by: user.id,
+        assigned_by: user.id,
+        assigned_to_department: formData.assigned_to_department || null,
+        assigned_to_jpn: formData.assigned_to_jpn || null,
+        endorsement_date: new Date().toISOString().split('T')[0]
+      }
+
+      const { data: newSyor, error: syorError } = await supabase
+        .from('syor')
+        .insert([syorData])
+        .select()
+        .single()
+
+      if (syorError) throw syorError
+
+      const statusData = {
+        syor_id: newSyor.id,
+        department_id: formData.assigned_to_department || null,
+        jpn_id: formData.assigned_to_jpn || null,
+        status: 'belum_selesai' as const,
+        weight: 0.0,
+        comments: 'Syor baharu telah dicipta dan menunggu tindakan.',
+        updated_by: user.id
+      }
+
+      const { error: statusError } = await supabase
+        .from('status_tracking')
+        .insert([statusData])
+
+      if (statusError) throw statusError
+
+      setSuccess('Syor berjaya dicipta!')
+      
+      setFormData({
+        title: '',
+        syor_content: '',
+        assigned_to_department: '',
+        assigned_to_jpn: '',
+        priority: 'sederhana',
+        pemeriksaan_type: 'mata_pelajaran',
+        due_date: '',
+        response_deadline: ''
+      })
+
+      setTimeout(() => {
+        router.push('/syor')
+      }, 2000)
+
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Ralat tidak diketahui';
+      setError(errorMessage);
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+
+    if (name === 'assigned_to_department' && value) {
+      setFormData(prev => ({ ...prev, assigned_to_jpn: '' }))
+    } else if (name === 'assigned_to_jpn' && value) {
+      setFormData(prev => ({ ...prev, assigned_to_department: '' }))
+    }
+  }
+
+  return (
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
+      <DashboardHeader />
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="mb-6">
+          <button
+            onClick={() => router.back()}
+            className="text-blue-400 hover:text-blue-300 flex items-center gap-2 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Kembali ke Senarai Syor
+          </button>
+        </div>
+
+        <div className="mb-8">
+          <h1 className="cloudpeak-title">Cipta Syor Baharu</h1>
+          <p className="mt-3 text-slate-300 text-lg">Cipta syor perakuan menteri untuk bahagian atau JPN</p>
+        </div>
+
+        <div className="cloudpeak-card">
+          <div className="px-8 py-6 border-b border-slate-700 border-opacity-30">
+            <h2 className="text-xl font-medium text-white">Maklumat Syor</h2>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-8 space-y-8">
+            {error && (
+              <div className="bg-red-500 bg-opacity-20 border border-red-500 border-opacity-30 text-red-300 px-6 py-4 rounded-lg">
+                <p className="text-sm">{error}</p>
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-500 bg-opacity-20 border border-green-500 border-opacity-30 text-green-300 px-6 py-4 rounded-lg">
+                <p className="text-sm">{success}</p>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-3">
+                Tajuk Syor <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="Masukkan tajuk syor"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Nama Bahagian
+                </label>
+                <select
+                  name="assigned_to_department"
+                  value={formData.assigned_to_department}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                >
+                  <option value="">Pilih Bahagian</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name} ({dept.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Nama JPN
+                </label>
+                <select
+                  name="assigned_to_jpn"
+                  value={formData.assigned_to_jpn}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                >
+                  <option value="">Pilih JPN</option>
+                  {jpns.map((jpn) => (
+                    <option key={jpn.id} value={jpn.id}>
+                      {jpn.name} ({jpn.state})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-4 backdrop-blur-sm">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-blue-200 font-semibold mb-1">Nota:</p>
+                  <p className="text-sm text-blue-300">Pilih sama ada Bahagian atau JPN untuk syor ini. Anda tidak boleh pilih kedua-duanya.</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-3">
+                Syor (Perakuan Menteri) <span className="text-red-400">*</span>
+              </label>
+              <textarea
+                name="syor_content"
+                value={formData.syor_content}
+                onChange={handleInputChange}
+                rows={8}
+                className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-vertical"
+                placeholder="Masukkan kandungan lengkap syor yang akan dihantar kepada bahagian/JPN yang dipilih..."
+                required
+              />
+              <p className="text-xs text-slate-400 mt-2">
+                Masukkan kandungan lengkap syor yang akan dihantar kepada bahagian/JPN yang dipilih.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Keutamaan
+                </label>
+                <select
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                >
+                  <option value="rendah">Rendah</option>
+                  <option value="sederhana">Sederhana</option>
+                  <option value="tinggi">Tinggi</option>
+                  <option value="kritikal">Kritikal</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Jenis Pemeriksaan
+                </label>
+                <select
+                  name="pemeriksaan_type"
+                  value={formData.pemeriksaan_type}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                >
+                  <option value="mata_pelajaran">Mata Pelajaran</option>
+                  <option value="keciciran_murid">Keciciran Murid</option>
+                  <option value="infrastruktur">Infrastruktur</option>
+                  <option value="kualiti_guru">Kualiti Guru</option>
+                  <option value="kurikulum">Kurikulum</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Tarikh Akhir Tindakan <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="due_date"
+                  value={formData.due_date}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Tarikh Akhir Maklum Balas <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="response_deadline"
+                  value={formData.response_deadline}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="bg-yellow-500 bg-opacity-10 border border-yellow-500 border-opacity-30 rounded-lg p-4 backdrop-blur-sm">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-200 font-semibold">Tarikh Syor:</p>
+                  <p className="text-sm text-yellow-300">{new Date().toLocaleDateString('ms-MY')} (Hari ini)</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-4 pt-8 border-t border-slate-700 border-opacity-30">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="px-6 py-3 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700 hover:bg-opacity-30 transition-all transform hover:scale-105"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="cloudpeak-button px-8 py-3 rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {loading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                    Mencipta...
+                  </div>
+                ) : (
+                  'Cipta Syor'
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}

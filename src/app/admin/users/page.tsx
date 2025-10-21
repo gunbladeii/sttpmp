@@ -1,0 +1,478 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/useAuthSimple'
+import DashboardHeader from '@/components/DashboardHeader'
+import { supabase } from '@/lib/supabase'
+
+interface User {
+  id: string
+  email: string
+  name: string
+  role: string
+  sector: string | null
+  department_id: string | null
+  jpn_id: string | null
+  is_active: boolean
+  is_approved: boolean
+  created_at: string
+  department?: {
+    id: string
+    name: string
+    code: string
+  }
+  jpn?: {
+    id: string
+    name: string
+    state: string
+  }
+}
+
+interface Department {
+  id: string
+  name: string
+  code: string
+}
+
+interface JPN {
+  id: string
+  name: string
+  state: string
+}
+
+const roleOptions = [
+  { value: 'pemantau', label: 'Pemantau' },
+  { value: 'penyelaras_bahagian', label: 'Penyelaras Bahagian' },
+  { value: 'penyelaras_jpn', label: 'Penyelaras JPN' },
+  { value: 'peneraju_pemeriksaan', label: 'Peneraju Pemeriksaan' },
+  { value: 'admin', label: 'Admin' }
+]
+
+const sectorOptions = [
+  { value: 'SDP', label: 'SDP - Sektor Dasar dan Perancangan' },
+  { value: 'SDTM', label: 'SDTM - Sektor Data dan Teknologi Maklumat' },
+  { value: 'SSJK', label: 'SSJK - Sektor Standard dan Jaminan Kualiti' },
+  { value: 'SPK', label: 'SPK - Sektor Penaziran Kurikulum' },
+  { value: 'SPHEMK', label: 'SPHEMK - Sektor Penaziran Hal Ehwal Murid & Kokurikulum' },
+  { value: 'SPIP', label: 'SPIP - Sektor Penaziran Institusi Pendidikan' }
+]
+
+const getRoleLabel = (role: string) => {
+  const roleOption = roleOptions.find(r => r.value === role)
+  return roleOption ? roleOption.label : role
+}
+
+const getSectorLabel = (sector: string | null) => {
+  if (!sector) return 'Tidak ditetapkan'
+  const sectorOption = sectorOptions.find(s => s.value === sector)
+  return sectorOption ? sectorOption.label : sector
+}
+
+const getRoleColor = (role: string) => {
+  switch (role) {
+    case 'admin': return 'bg-red-500/20 text-red-300 border-red-500/30'
+    case 'peneraju_pemeriksaan': return 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+    case 'penyelaras_bahagian': return 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+    case 'penyelaras_jpn': return 'bg-green-500/20 text-green-300 border-green-500/30'
+    case 'pemantau': return 'bg-slate-500/20 text-slate-300 border-slate-500/30'
+    default: return 'bg-slate-500/20 text-slate-300 border-slate-500/30'
+  }
+}
+
+export default function AdminUsersPage() {
+  const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
+  const [users, setUsers] = useState<User[]>([])
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [jpnList, setJpnList] = useState<JPN[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [formData, setFormData] = useState({
+    role: '',
+    sector: '',
+    department_id: '',
+    jpn_id: ''
+  })
+  const [isUpdating, setIsUpdating] = useState(false)
+
+  // Check authentication and admin access
+  useEffect(() => {
+    if (!authLoading && (!user || user.role !== 'admin')) {
+      router.push('/dashboard')
+    }
+  }, [user, authLoading, router])
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      fetchAllData()
+    }
+  }, [user])
+
+  const fetchAllData = async () => {
+    try {
+      setIsLoading(true)
+      await Promise.all([
+        fetchUsers(),
+        fetchDepartments(),
+        fetchJPN()
+      ])
+    } catch (error) {
+      console.error('Error fetching data:', error)
+      setError('Ralat memuat data')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const fetchUsers = async () => {
+    const { data, error } = await supabase
+      .from('users')
+      .select(`
+        *,
+        department:department_id(id, name, code),
+        jpn:jpn_id(id, name, state)
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    setUsers(data || [])
+  }
+
+  const fetchDepartments = async () => {
+    const { data, error } = await supabase
+      .from('departments')
+      .select('id, name, code')
+      .order('name')
+
+    if (error) throw error
+    setDepartments(data || [])
+  }
+
+  const fetchJPN = async () => {
+    const { data, error } = await supabase
+      .from('jpn')
+      .select('id, name, state')
+      .order('name')
+
+    if (error) throw error
+    setJpnList(data || [])
+  }
+
+
+
+  const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ is_active: !currentStatus })
+        .eq('id', userId)
+
+      if (error) throw error
+      await fetchUsers()
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Ralat mengemas kini status pengguna: ${errorMessage}`)
+    }
+  }
+
+  const handleEditUser = (userToEdit: User) => {
+    setEditingUser(userToEdit)
+    setFormData({
+      role: userToEdit.role,
+      sector: userToEdit.sector || '',
+      department_id: userToEdit.department_id || '',
+      jpn_id: userToEdit.jpn_id || ''
+    })
+  }
+
+  const handleUpdateUser = async () => {
+    if (!editingUser) return
+
+    try {
+      setIsUpdating(true)
+      
+      // Prepare update data based on role
+      const updateData: any = { 
+        role: formData.role,
+        sector: null,
+        department_id: null,
+        jpn_id: null
+      }
+
+      // Set appropriate fields based on role
+      if (formData.role === 'peneraju_pemeriksaan') {
+        updateData.sector = formData.sector || null
+      } else if (formData.role === 'penyelaras_bahagian') {
+        updateData.department_id = formData.department_id || null
+      } else if (formData.role === 'penyelaras_jpn') {
+        updateData.jpn_id = formData.jpn_id || null
+      }
+
+      const { error } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', editingUser.id)
+
+      if (error) throw error
+
+      await fetchUsers()
+      setEditingUser(null)
+      setFormData({ role: '', sector: '', department_id: '', jpn_id: '' })
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Ralat mengemas kini pengguna: ${errorMessage}`)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingUser(null)
+    setFormData({ role: '', sector: '', department_id: '', jpn_id: '' })
+  }
+
+  // Show loading if either auth is loading or data is loading
+  if (authLoading || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <p className="text-slate-300 text-lg">
+            {authLoading ? 'Mengesahkan pengguna...' : 'Memuatkan pengurusan pengguna...'}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
+      <DashboardHeader />
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="mb-8">
+          <h1 className="cloudpeak-title">Pengurusan Pengguna</h1>
+          <p className="mt-3 text-slate-300 text-lg">Urus akaun pengguna sistem STTPMP</p>
+        </div>
+
+        {/* Users Table */}
+        <div className="cloudpeak-card">
+          <div className="px-8 py-6 border-b border-slate-700/30">
+            <h2 className="text-xl font-medium text-white">Senarai Pengguna Sistem</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-700/30">
+              <thead className="bg-slate-800/30">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                    Pengguna
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                    Peranan
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                    Sektor/Bahagian/JPN
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                    Tarikh Daftar
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                    Tindakan
+                  </th>
+                </tr>
+              </thead>
+                <tbody className="divide-y divide-slate-700/30">
+                  {users.map((user) => (
+                    <tr key={user.id} className="hover:bg-slate-800/20 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-white">
+                            {user.name}
+                          </div>
+                          <div className="text-sm text-slate-400">
+                            {user.email}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`cloudpeak-badge inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
+                          {getRoleLabel(user.role)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-slate-300">
+                          {user.role === 'peneraju_pemeriksaan' && user.sector && (
+                            <span className="text-purple-300">{getSectorLabel(user.sector)}</span>
+                          )}
+                          {user.role === 'penyelaras_bahagian' && user.department && (
+                            <span className="text-blue-300">{user.department.name}</span>
+                          )}
+                          {user.role === 'penyelaras_jpn' && user.jpn && (
+                            <span className="text-green-300">{user.jpn.name}</span>
+                          )}
+                          {!user.sector && !user.department && !user.jpn && (
+                            <span className="text-slate-400">-</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`cloudpeak-badge inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                          user.is_active && user.is_approved
+                            ? 'bg-green-500/20 text-green-300 border-green-500/30'
+                            : 'bg-red-500/20 text-red-300 border-red-500/30'
+                        }`}>
+                          {user.is_active && user.is_approved ? 'Aktif' : 'Tidak Aktif'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                        {new Date(user.created_at).toLocaleDateString('ms-MY')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-3">
+                          <button
+                            onClick={() => handleEditUser(user)}
+                            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm transition-all transform hover:scale-105 shadow-lg"
+                          >
+                            Edit Role
+                          </button>
+                          <button
+                            onClick={() => toggleUserStatus(user.id, user.is_active)}
+                            className={`px-4 py-2 rounded-lg text-sm transition-all transform hover:scale-105 shadow-lg ${
+                              user.is_active 
+                                ? 'bg-red-600 hover:bg-red-500 text-white' 
+                                : 'bg-green-600 hover:bg-green-500 text-white'
+                            }`}
+                          >
+                            {user.is_active ? 'Nyahaktif' : 'Aktifkan'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+        </div>
+
+        {/* Edit User Modal */}
+        {editingUser && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div className="cloudpeak-card p-8 max-w-lg w-full mx-4 shadow-2xl">
+              <h3 className="text-xl font-semibold mb-6 text-white">
+                Edit Pengguna: {editingUser.name}
+              </h3>
+              
+              {/* Role Selection */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-white mb-3">
+                  Peranan
+                </label>
+                <select
+                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
+                  value={formData.role}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    role: e.target.value,
+                    // Reset other fields when role changes
+                    sector: '',
+                    department_id: '',
+                    jpn_id: ''
+                  }))}
+                >
+                  <option value="">Pilih Peranan</option>
+                  {roleOptions.map(role => (
+                    <option key={role.value} value={role.value}>{role.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Sector Selection for Peneraju */}
+              {formData.role === 'peneraju_pemeriksaan' && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-white mb-3">
+                    Sektor
+                  </label>
+                  <select
+                    className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
+                    value={formData.sector}
+                    onChange={(e) => setFormData(prev => ({ ...prev, sector: e.target.value }))}
+                  >
+                    <option value="">Pilih Sektor</option>
+                    {sectorOptions.map(sector => (
+                      <option key={sector.value} value={sector.value}>{sector.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Department Selection for Penyelaras Bahagian */}
+              {formData.role === 'penyelaras_bahagian' && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-white mb-3">
+                    Bahagian
+                  </label>
+                  <select
+                    className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
+                    value={formData.department_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, department_id: e.target.value }))}
+                  >
+                    <option value="">Pilih Bahagian</option>
+                    {departments.map(dept => (
+                      <option key={dept.id} value={dept.id}>{dept.name} ({dept.code})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* JPN Selection for Penyelaras JPN */}
+              {formData.role === 'penyelaras_jpn' && (
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-white mb-3">
+                    JPN
+                  </label>
+                  <select
+                    className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
+                    value={formData.jpn_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, jpn_id: e.target.value }))}
+                  >
+                    <option value="">Pilih JPN</option>
+                    {jpnList.map(jpn => (
+                      <option key={jpn.id} value={jpn.id}>{jpn.name} ({jpn.state})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  disabled={isUpdating}
+                  className="px-6 py-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleUpdateUser}
+                  disabled={isUpdating || !formData.role || 
+                    (formData.role === 'peneraju_pemeriksaan' && !formData.sector) ||
+                    (formData.role === 'penyelaras_bahagian' && !formData.department_id) ||
+                    (formData.role === 'penyelaras_jpn' && !formData.jpn_id)
+                  }
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                >
+                  {isUpdating ? 'Mengemas kini...' : 'Kemas kini'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
