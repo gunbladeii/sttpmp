@@ -90,10 +90,27 @@ export default function SyorDetailsPage() {
 
   // Check authentication only after auth loading is complete
   useEffect(() => {
+    console.log('Auth state check:', { authLoading, user: !!user, userEmail: user?.email })
+    
     if (!authLoading && !user) {
+      console.log('Redirecting to login - no user found')
       router.push('/login')
     }
   }, [user, authLoading, router])
+
+  // Don't render anything if still checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      </div>
+    )
+  }
+
+  // Don't render if no user (will redirect)
+  if (!user) {
+    return null
+  }
 
   // Fetch syor details
   useEffect(() => {

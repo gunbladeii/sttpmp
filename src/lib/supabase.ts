@@ -10,7 +10,13 @@ let browserClient: SupabaseClient<Database> | null = null
 // Browser-side client for client components (singleton)
 export const createBrowserSupabaseClient = () => {
   if (!browserClient) {
-    browserClient = createClient<Database>(supabaseUrl, supabaseKey)
+    browserClient = createClient<Database>(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    })
   }
   return browserClient
 }
