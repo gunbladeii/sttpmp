@@ -19,6 +19,8 @@ interface SyorModalProps {
 }
 
 function SyorModal({ isOpen, onClose, title, syorList, status }: SyorModalProps) {
+  const router = useRouter() // Add router for navigation
+  
   if (!isOpen) return null
 
   return (
@@ -49,7 +51,7 @@ function SyorModal({ isOpen, onClose, title, syorList, status }: SyorModalProps)
                     className="bg-slate-700/30 border border-slate-600 rounded-lg p-4 hover:bg-slate-600/30 transition-colors cursor-pointer"
                     onClick={() => {
                       onClose(); // Close modal first
-                      window.location.href = `/syor/${syor.id}`; // Same tab navigation
+                      router.push(`/syor/${syor.id}`); // Use Next.js router
                     }}
                   >
                     <div className="flex items-start justify-between">
