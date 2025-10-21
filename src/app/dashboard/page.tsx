@@ -90,7 +90,8 @@ export default function Dashboard() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
-    const [syorList, setSyorList] = useState<Record<string, unknown>[]>([]) // Temporary fix for types
+  const [syorList, setSyorList] = useState<Record<string, unknown>[]>([]) // Temporary fix for types
+  const [recentSyor, setRecentSyor] = useState<any[]>([]) // Recent syor for dashboard
   const [allSyor, setAllSyor] = useState<any[]>([]) // Store all syor for filtering
   const [userDetails, setUserDetails] = useState<any>(null) // Store user with department/JPN details
   const [loading, setLoading] = useState(true)
