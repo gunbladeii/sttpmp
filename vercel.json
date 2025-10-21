@@ -4,14 +4,6 @@
       "maxDuration": 10
     }
   },
-  "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
-    "GOOGLE_DRIVE_FOLDER_ID": "@google_drive_folder_id",
-    "GOOGLE_SERVICE_ACCOUNT_EMAIL": "@google_service_account_email",
-    "GOOGLE_PRIVATE_KEY": "@google_private_key"
-  },
   "headers": [
     {
       "source": "/(.*)",
