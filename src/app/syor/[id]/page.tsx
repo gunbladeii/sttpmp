@@ -107,8 +107,8 @@ export default function SyorDetailsPage() {
     )
   }
 
-  // Don't render if no user (will redirect)
-  if (!user) {
+  // Don't render if no user AND auth is not loading (will redirect)
+  if (!authLoading && !user) {
     return null
   }
 
