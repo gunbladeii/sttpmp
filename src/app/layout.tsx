@@ -18,6 +18,14 @@ export const metadata: Metadata = {
   title: "STTPMP - Sistem Tahap Tindakan Perakuan Menteri Pendidikan",
   description: "Sistem pemantauan komprehensif untuk maklum balas dan syor daripada bahagian pendidikan dan Jabatan Pendidikan Negeri (JPN)",
   keywords: "MOE, Kementerian Pendidikan Malaysia, STTPMP, pemantauan, syor, feedback",
+  icons: {
+    icon: [
+      { url: '/logoJN.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32' }
+    ],
+    shortcut: '/logoJN.svg',
+    apple: '/logoJN.svg',
+  },
 };
 
 export default function RootLayout({
