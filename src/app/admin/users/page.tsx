@@ -188,14 +188,15 @@ export default function AdminUsersPage() {
   }
 
   const handleUpdateUser = async () => {
-    if (!editingUser) return
+    if (!editingUser || !user?.email) return
 
     try {
       setIsUpdating(true)
       
       // Prepare update data based on role
       const updateData: any = { 
-        role: formData.role,
+        userId: editingUser.id,
+        newRole: formData.role,
         sector: null,
         department_id: null,
         jpn_id: null
@@ -210,16 +211,26 @@ export default function AdminUsersPage() {
         updateData.jpn_id = formData.jpn_id || null
       }
 
-      const { error } = await supabase
-        .from('users')
-        .update(updateData)
-        .eq('id', editingUser.id)
+      // Call API endpoint with admin access
+      const response = await fetch('/api/admin/update-user-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': user.email
+        },
+        body: JSON.stringify(updateData)
+      })
 
-      if (error) throw error
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Gagal mengemas kini pengguna')
+      }
 
       await fetchUsers()
       setEditingUser(null)
       setFormData({ role: '', sector: '', department_id: '', jpn_id: '' })
+      alert('Role pengguna berjaya dikemas kini!')
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       alert(`Ralat mengemas kini pengguna: ${errorMessage}`)

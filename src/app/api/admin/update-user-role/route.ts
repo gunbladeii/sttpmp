@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, newRole } = await request.json()
+    const { userId, newRole, sector, department_id, jpn_id } = await request.json()
 
     if (!userId || !newRole) {
       return NextResponse.json({ error: 'User ID dan role diperlukan' }, { status: 400 })
@@ -28,20 +28,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    // Validate role
+    // Validate role and required fields
     const allowedRoles = ['pemantau', 'penyelaras_bahagian', 'penyelaras_jpn', 'peneraju_pemeriksaan', 'admin']
     if (!allowedRoles.includes(newRole)) {
       return NextResponse.json({ error: 'Role tidak sah' }, { status: 400 })
     }
 
-    // Simple role update - just update the role field
+    // Validate required fields based on role
+    if (newRole === 'peneraju_pemeriksaan' && !sector) {
+      return NextResponse.json({ error: 'Sektor diperlukan untuk Peneraju Pemeriksaan' }, { status: 400 })
+    }
+    if (newRole === 'penyelaras_bahagian' && !department_id) {
+      return NextResponse.json({ error: 'Bahagian diperlukan untuk Penyelaras Bahagian' }, { status: 400 })
+    }
+    if (newRole === 'penyelaras_jpn' && !jpn_id) {
+      return NextResponse.json({ error: 'JPN diperlukan untuk Penyelaras JPN' }, { status: 400 })
+    }
+
+    // Prepare update data
+    const updateData: any = {
+      role: newRole,
+      sector: null,
+      department_id: null,
+      jpn_id: null
+    }
+
+    // Set appropriate fields based on role
+    if (newRole === 'peneraju_pemeriksaan' && sector) {
+      updateData.sector = sector
+    } else if (newRole === 'penyelaras_bahagian' && department_id) {
+      updateData.department_id = department_id
+    } else if (newRole === 'penyelaras_jpn' && jpn_id) {
+      updateData.jpn_id = jpn_id
+    }
+
+    // Update user with admin client
     const { error: updateError } = await supabaseAdmin
       .from('users')
-      .update({ 
-        role: newRole,
-        department_id: null, // Clear department assignment for flexibility
-        jpn_id: null // Clear JPN assignment for flexibility
-      })
+      .update(updateData)
       .eq('id', userId)
 
     if (updateError) {

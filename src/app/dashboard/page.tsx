@@ -198,17 +198,17 @@ export default function Dashboard() {
         } else if (user?.role === 'penyelaras_jpn' && user?.jpn_id) {
           syorQuery = syorQuery.eq('assigned_to_jpn', user.jpn_id)
         } else if (user?.role === 'peneraju_pemeriksaan' && user?.sector) {
-          // Peneraju Pemeriksaan: only see syor assigned to departments in their sector
-          const { data: departmentsInSector } = await supabase
-            .from('departments')
+          // Peneraju Pemeriksaan: see syor created by users in their sector
+          const { data: usersInSector } = await supabase
+            .from('users')
             .select('id')
             .eq('sector', user.sector)
           
-          if (departmentsInSector && departmentsInSector.length > 0) {
-            const departmentIds = departmentsInSector.map(dept => dept.id)
-            syorQuery = syorQuery.in('assigned_to_department', departmentIds)
+          if (usersInSector && usersInSector.length > 0) {
+            const userIds = usersInSector.map(u => u.id)
+            syorQuery = syorQuery.in('created_by', userIds)
           } else {
-            // If no departments in their sector, show no syor
+            // If no users in their sector, show no syor
             syorQuery = syorQuery.eq('id', 'no-match-uuid')
           }
         }
@@ -236,15 +236,15 @@ export default function Dashboard() {
         } else if (user?.role === 'penyelaras_jpn' && user?.jpn_id) {
           allSyorQuery = allSyorQuery.eq('assigned_to_jpn', user.jpn_id)
         } else if (user?.role === 'peneraju_pemeriksaan' && user?.sector) {
-          // Reuse the same department filtering logic
-          const { data: departmentsInSector } = await supabase
-            .from('departments')
+          // Reuse the same user filtering logic
+          const { data: usersInSector } = await supabase
+            .from('users')
             .select('id')
             .eq('sector', user.sector)
           
-          if (departmentsInSector && departmentsInSector.length > 0) {
-            const departmentIds = departmentsInSector.map(dept => dept.id)
-            allSyorQuery = allSyorQuery.in('assigned_to_department', departmentIds)
+          if (usersInSector && usersInSector.length > 0) {
+            const userIds = usersInSector.map(u => u.id)
+            allSyorQuery = allSyorQuery.in('created_by', userIds)
           } else {
             allSyorQuery = allSyorQuery.eq('id', 'no-match-uuid')
           }

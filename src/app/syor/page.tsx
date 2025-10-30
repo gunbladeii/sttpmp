@@ -74,19 +74,22 @@ export default function SyorList() {
           // Penyelaras JPN: only see syor assigned to their JPN
           query = query.eq('assigned_to_jpn', user.jpn_id)
         } else if (user?.role === 'peneraju_pemeriksaan' && user?.sector) {
-          // Peneraju Pemeriksaan: only see syor assigned to departments in their sector
-          // First get departments in their sector
-          const { data: departmentsInSector } = await supabase
-            .from('departments')
+          // Peneraju Pemeriksaan: see syor created by users in their sector
+          // Filter by created_by users who have the same sector
+          
+          // Get users in their sector (both peneraju and other roles)
+          const { data: usersInSector } = await supabase
+            .from('users')
             .select('id')
             .eq('sector', user.sector)
           
-          if (departmentsInSector && departmentsInSector.length > 0) {
-            const departmentIds = departmentsInSector.map(dept => dept.id)
-            query = query.in('assigned_to_department', departmentIds)
+          if (usersInSector && usersInSector.length > 0) {
+            const userIds = usersInSector.map(u => u.id)
+            // Show syor created by users in their sector
+            query = query.in('created_by', userIds)
           } else {
-            // If no departments in their sector, show no syor
-            query = query.eq('id', 'no-match-uuid')
+            // If no users in their sector, show no syor (edge case)
+            query = query.eq('created_by', 'non-existent-id')
           }
         }
         // Admin and pemantau can see all syor (no filter)

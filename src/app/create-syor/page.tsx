@@ -106,6 +106,11 @@ export default function CreateSyorPage() {
       if (!formData.response_deadline) {
         throw new Error('Tarikh akhir maklum balas diperlukan')
       }
+      
+      // Validate date constraint: response_deadline <= due_date
+      if (new Date(formData.response_deadline) > new Date(formData.due_date)) {
+        throw new Error('Tarikh akhir maklum balas mestilah pada atau sebelum tarikh akhir syor')
+      }
 
       const syorData = {
         title: formData.title.trim(),
@@ -121,13 +126,18 @@ export default function CreateSyorPage() {
         endorsement_date: new Date().toISOString().split('T')[0]
       }
 
+      console.log('Inserting syor data:', syorData)
+      
       const { data: newSyor, error: syorError } = await supabase
         .from('syor')
         .insert([syorData])
         .select()
         .single()
 
-      if (syorError) throw syorError
+      if (syorError) {
+        console.error('Syor insert error:', syorError)
+        throw new Error(`Gagal cipta syor: ${syorError.message}`)
+      }
 
       const statusData = {
         syor_id: newSyor.id,
@@ -139,11 +149,16 @@ export default function CreateSyorPage() {
         updated_by: user.id
       }
 
+      console.log('Inserting status data:', statusData)
+
       const { error: statusError } = await supabase
         .from('status_tracking')
         .insert([statusData])
 
-      if (statusError) throw statusError
+      if (statusError) {
+        console.error('Status insert error:', statusError)
+        throw new Error(`Gagal cipta status: ${statusError.message}`)
+      }
 
       setSuccess('Syor berjaya dicipta!')
       
@@ -163,6 +178,7 @@ export default function CreateSyorPage() {
       }, 2000)
 
     } catch (err: unknown) {
+      console.error('Create syor full error:', err)
       const errorMessage = err instanceof Error ? err.message : 'Ralat tidak diketahui';
       setError(errorMessage);
     } finally {
