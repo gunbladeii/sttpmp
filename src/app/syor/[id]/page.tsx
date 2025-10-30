@@ -132,7 +132,12 @@ export default function SyorDetailsPage() {
               weight,
               comments,
               updated_at,
-              updater:updated_by(name)
+              updater:updated_by(
+                name,
+                department:department_id(name, code),
+                jpn:jpn_id(name, state),
+                sector
+              )
             )
           `)
           .eq('id', syorId)
@@ -844,6 +849,18 @@ export default function SyorDetailsPage() {
                           <p className="text-sm text-slate-200">{status.comments}</p>
                           <p className="text-xs text-slate-400 mt-1">
                             {formatDate(status.updated_at)} oleh {status.updater?.name}
+                            {(() => {
+                              if (status.updater?.department) {
+                                return ` dari ${status.updater.department.name} (${status.updater.department.code})`
+                              }
+                              if (status.updater?.jpn) {
+                                return ` dari ${status.updater.jpn.name}`
+                              }
+                              if (status.updater?.sector) {
+                                return ` dari ${status.updater.sector}`
+                              }
+                              return ''
+                            })()}
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
