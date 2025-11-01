@@ -310,6 +310,19 @@ export default function SyorList() {
                             </svg>
                             <span className="text-white font-medium">Assigned to:</span> {item.department?.name || item.jpn?.name || 'Unassigned'}
                           </div>
+
+                          {item.creator && (
+                            <div className="flex items-center gap-2 text-slate-400">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                              <span className="text-white font-medium">Created by:</span> 
+                              <span className="text-blue-300">{item.creator.name}</span>
+                              {item.creator.sector && (
+                                <span className="text-slate-400">({item.creator.sector})</span>
+                              )}
+                            </div>
+                          )}
                           
                           <div className="flex items-center gap-2 text-slate-400">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

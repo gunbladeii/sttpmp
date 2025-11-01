@@ -60,6 +60,14 @@ function SyorModal({ isOpen, onClose, title, syorList, status }: SyorModalProps)
                         <p className="text-sm text-slate-300 mb-2">
                           Penyelaras: {syor.department?.name || syor.jpn?.name || 'Tidak ditetapkan'}
                         </p>
+                        {syor.creator && (
+                          <p className="text-sm text-blue-300 mb-2">
+                            Dicipta oleh: {syor.creator.name}
+                            {syor.creator.sector && (
+                              <span className="text-slate-400"> ({syor.creator.sector})</span>
+                            )}
+                          </p>
+                        )}
                         <p className="text-xs text-slate-400">
                           Tarikh Akhir: {new Date(syor.due_date).toLocaleDateString('ms-MY')}
                         </p>
@@ -530,6 +538,14 @@ export default function Dashboard() {
                           <p className="text-sm text-slate-300 mb-1">
                             Ditugaskan kepada: {syor.department?.name || syor.jpn?.name || 'Tidak ditetapkan'}
                           </p>
+                          {syor.creator && (
+                            <p className="text-sm text-blue-300 mb-1">
+                              Dicipta oleh: {syor.creator.name} 
+                              {syor.creator.sector && (
+                                <span className="text-slate-400"> ({syor.creator.sector})</span>
+                              )}
+                            </p>
+                          )}
                           <p className="text-xs text-slate-400">
                             Tarikh Akhir: {new Date(syor.due_date).toLocaleDateString('ms-MY')}
                           </p>
