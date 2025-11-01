@@ -1,9 +1,33 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuthSimple'
 import DashboardHeader from '@/components/DashboardHeader'
+import { supabase } from '@/lib/supabase'
+
+// Type definitions
+interface Department {
+  id: string
+  name: string
+  code: string
+}
+
+interface JPN {
+  id: string
+  name: string
+  state: string
+}
+
+// Sector options
+const sectorOptions = [
+  { value: 'SDP', label: 'SDP - Sektor Dasar dan Perancangan' },
+  { value: 'SDTM', label: 'SDTM - Sektor Data dan Teknologi Maklumat' },
+  { value: 'SSJK', label: 'SSJK - Sektor Standard dan Jaminan Kualiti' },
+  { value: 'SPK', label: 'SPK - Sektor Penaziran Kurikulum' },
+  { value: 'SPHEMK', label: 'SPHEMK - Sektor Penaziran Hal Ehwal Murid & Kokurikulum' },
+  { value: 'SPIP', label: 'SPIP - Sektor Penaziran Institusi Pendidikan' }
+]
 
 export default function CreateAdminPage() {
   const router = useRouter()
@@ -13,18 +37,62 @@ export default function CreateAdminPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'admin'
+    role: 'admin',
+    department_id: '',
+    jpn_id: '',
+    sector: ''
   })
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [jpnList, setJpnList] = useState<JPN[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  // Fetch departments and JPN data
+  useEffect(() => {
+    fetchDepartments()
+    fetchJPN()
+  }, [])
+
+  const fetchDepartments = async () => {
+    const { data, error } = await supabase
+      .from('departments')
+      .select('id, name, code')
+      .order('name')
+
+    if (!error) {
+      setDepartments(data || [])
+    }
+  }
+
+  const fetchJPN = async () => {
+    const { data, error } = await supabase
+      .from('jpn')
+      .select('id, name, state')
+      .order('name')
+
+    if (!error) {
+      setJpnList(data || [])
+    }
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        [name]: value
+      }
+      
+      // Reset dependent fields when role changes
+      if (name === 'role') {
+        updated.department_id = ''
+        updated.jpn_id = ''
+        updated.sector = ''
+      }
+      
+      return updated
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +125,10 @@ export default function CreateAdminPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          role: formData.role
+          role: formData.role,
+          department_id: formData.department_id || null,
+          jpn_id: formData.jpn_id || null,
+          sector: formData.sector || null
         }),
       })
 
@@ -70,7 +141,10 @@ export default function CreateAdminPage() {
           email: '',
           password: '',
           confirmPassword: '',
-          role: 'admin'
+          role: 'admin',
+          department_id: '',
+          jpn_id: '',
+          sector: ''
         })
       } else {
         setError(result.error || 'Gagal mencipta pengguna admin')
@@ -157,6 +231,73 @@ export default function CreateAdminPage() {
                   <option value="pemantau">Pemantau</option>
                 </select>
               </div>
+
+              {/* Dynamic dropdown based on role */}
+              {formData.role === 'penyelaras_bahagian' && (
+                <div>
+                  <label className="block text-sm font-medium text-white mb-3">
+                    Bahagian
+                  </label>
+                  <select
+                    name="department_id"
+                    value={formData.department_id}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
+                  >
+                    <option value="">Pilih Bahagian</option>
+                    {departments.map(dept => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name} ({dept.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {formData.role === 'penyelaras_jpn' && (
+                <div>
+                  <label className="block text-sm font-medium text-white mb-3">
+                    JPN
+                  </label>
+                  <select
+                    name="jpn_id"
+                    value={formData.jpn_id}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
+                  >
+                    <option value="">Pilih JPN</option>
+                    {jpnList.map(jpn => (
+                      <option key={jpn.id} value={jpn.id}>
+                        {jpn.name} ({jpn.state})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {formData.role === 'peneraju_pemeriksaan' && (
+                <div>
+                  <label className="block text-sm font-medium text-white mb-3">
+                    Sektor
+                  </label>
+                  <select
+                    name="sector"
+                    value={formData.sector}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
+                  >
+                    <option value="">Pilih Sektor</option>
+                    {sectorOptions.map(sector => (
+                      <option key={sector.value} value={sector.value}>
+                        {sector.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
