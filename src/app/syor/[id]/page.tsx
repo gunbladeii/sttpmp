@@ -21,6 +21,11 @@ interface JPN {
   state: string
 }
 
+interface Pemeriksaan {
+  NamaPemeriksaan: string
+  Tahun: string
+}
+
 interface Document {
   id: string
   fileName: string
@@ -67,6 +72,10 @@ export default function SyorDetailsPage() {
   const [documents, setDocuments] = useState<Document[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
   const [jpns, setJpns] = useState<JPN[]>([])
+  const [pemeriksaanList, setPemeriksaanList] = useState<Pemeriksaan[]>([])
+  const [filteredPemeriksaan, setFilteredPemeriksaan] = useState<Pemeriksaan[]>([])
+  const [pemeriksaanSearch, setPemeriksaanSearch] = useState('')
+  const [showPemeriksaanDropdown, setShowPemeriksaanDropdown] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -164,6 +173,7 @@ export default function SyorDetailsPage() {
           tindakan_comments: latestStatusData?.comments || '',
           tindakan_status: latestStatusData?.status || 'belum_selesai'
         })
+        setPemeriksaanSearch(data.title || '')
 
       } catch (err) {
         console.error('Error fetching syor details:', err)
@@ -218,6 +228,26 @@ export default function SyorDetailsPage() {
         if (jpnError) throw jpnError
         setJpns(jpnData || [])
 
+        // Fetch pemeriksaan data from MOE API
+        try {
+          const currentYear = new Date().getFullYear().toString()
+          const response = await fetch('https://enazir.moe.gov.my/APIcall.php/tknamapemeriksaan')
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch pemeriksaan data')
+          }
+
+          const data = await response.json()
+          
+          // Filter by current year
+          const currentYearData = data.filter((item: Pemeriksaan) => item.Tahun === currentYear)
+          
+          setPemeriksaanList(currentYearData)
+          setFilteredPemeriksaan(currentYearData)
+        } catch (apiError) {
+          console.error('Error fetching pemeriksaan:', apiError)
+        }
+
       } catch (error) {
         console.error('Error fetching options:', error)
       }
@@ -225,6 +255,24 @@ export default function SyorDetailsPage() {
 
     fetchOptions()
   }, [])
+
+  // Filter pemeriksaan based on search
+  useEffect(() => {
+    if (!pemeriksaanSearch.trim()) {
+      setFilteredPemeriksaan(pemeriksaanList)
+    } else {
+      const filtered = pemeriksaanList.filter(item =>
+        item.NamaPemeriksaan.toLowerCase().includes(pemeriksaanSearch.toLowerCase())
+      )
+      setFilteredPemeriksaan(filtered)
+    }
+  }, [pemeriksaanSearch, pemeriksaanList])
+
+  const handlePemeriksaanSelect = (namaPemeriksaan: string) => {
+    setFormData({ ...formData, title: namaPemeriksaan })
+    setPemeriksaanSearch(namaPemeriksaan)
+    setShowPemeriksaanDropdown(false)
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -535,16 +583,49 @@ export default function SyorDetailsPage() {
               {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-white mb-3">
-                  Tajuk Syor
+                  Nama Pemeriksaan
                 </label>
                 {isEditing && canEditBasicInfo ? (
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-slate-400"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={pemeriksaanSearch}
+                      onChange={(e) => {
+                        setPemeriksaanSearch(e.target.value)
+                        setShowPemeriksaanDropdown(true)
+                      }}
+                      onFocus={() => setShowPemeriksaanDropdown(true)}
+                      className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-slate-400"
+                      placeholder="Cari nama pemeriksaan..."
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    
+                    {showPemeriksaanDropdown && filteredPemeriksaan.length > 0 && (
+                      <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                        {filteredPemeriksaan.map((item, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => handlePemeriksaanSelect(item.NamaPemeriksaan)}
+                            className="w-full text-left px-4 py-3 hover:bg-slate-700 transition-colors text-white border-b border-slate-700 last:border-b-0"
+                          >
+                            <div className="font-medium">{item.NamaPemeriksaan}</div>
+                            <div className="text-xs text-slate-400 mt-1">Tahun: {item.Tahun}</div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {showPemeriksaanDropdown && filteredPemeriksaan.length === 0 && pemeriksaanSearch && (
+                      <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-600 rounded-lg shadow-xl p-4">
+                        <p className="text-slate-400 text-sm">Tiada pemeriksaan dijumpai untuk &quot;{pemeriksaanSearch}&quot;</p>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <h2 className="text-2xl font-bold text-white">{syor.title}</h2>
                 )}
