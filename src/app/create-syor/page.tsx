@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuthSimple'
 import { supabase } from '@/lib/supabase'
@@ -18,12 +18,22 @@ interface JPN {
   state: string
 }
 
+interface Pemeriksaan {
+  NamaPemeriksaan: string
+  Tahun: string
+}
+
 export default function CreateSyorPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(false)
   const [departments, setDepartments] = useState<Department[]>([])
   const [jpns, setJpns] = useState<JPN[]>([])
+  const [pemeriksaanList, setPemeriksaanList] = useState<Pemeriksaan[]>([])
+  const [filteredPemeriksaan, setFilteredPemeriksaan] = useState<Pemeriksaan[]>([])
+  const [pemeriksaanSearch, setPemeriksaanSearch] = useState('')
+  const [showPemeriksaanDropdown, setShowPemeriksaanDropdown] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -68,6 +78,28 @@ export default function CreateSyorPage() {
 
         setDepartments(deptData || [])
         setJpns(jpnData || [])
+
+        // Fetch pemeriksaan data from MOE API
+        try {
+          const currentYear = new Date().getFullYear().toString()
+          const response = await fetch('https://enazir.moe.gov.my/APIcall.php/tknamapemeriksaan')
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch pemeriksaan data')
+          }
+
+          const data = await response.json()
+          
+          // Filter by current year
+          const currentYearData = data.filter((item: Pemeriksaan) => item.Tahun === currentYear)
+          
+          setPemeriksaanList(currentYearData)
+          setFilteredPemeriksaan(currentYearData)
+        } catch (apiError) {
+          console.error('Error fetching pemeriksaan:', apiError)
+          // Don't block the form if API fails, just show warning
+          setError('Gagal memuat senarai pemeriksaan dari API MOE. Sila cuba sebentar lagi.')
+        }
       } catch (err) {
         console.error('Error fetching options:', err)
         setError('Gagal memuat senarai bahagian dan JPN')
@@ -76,6 +108,38 @@ export default function CreateSyorPage() {
 
     fetchOptions()
   }, [])
+
+  // Filter pemeriksaan based on search
+  useEffect(() => {
+    if (!pemeriksaanSearch.trim()) {
+      setFilteredPemeriksaan(pemeriksaanList)
+    } else {
+      const filtered = pemeriksaanList.filter(item =>
+        item.NamaPemeriksaan.toLowerCase().includes(pemeriksaanSearch.toLowerCase())
+      )
+      setFilteredPemeriksaan(filtered)
+    }
+  }, [pemeriksaanSearch, pemeriksaanList])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowPemeriksaanDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  const handlePemeriksaanSelect = (namaPemeriksaan: string) => {
+    setFormData({ ...formData, title: namaPemeriksaan })
+    setPemeriksaanSearch(namaPemeriksaan)
+    setShowPemeriksaanDropdown(false)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -239,19 +303,55 @@ export default function CreateSyorPage() {
               </div>
             )}
 
-            <div>
+            <div className="relative" ref={dropdownRef}>
               <label className="block text-sm font-medium text-slate-300 mb-3">
-                Tajuk Syor <span className="text-red-400">*</span>
+                Tajuk Pemeriksaan <span className="text-red-400">*</span>
               </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="Masukkan tajuk syor"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={pemeriksaanSearch}
+                  onChange={(e) => {
+                    setPemeriksaanSearch(e.target.value)
+                    setShowPemeriksaanDropdown(true)
+                  }}
+                  onFocus={() => setShowPemeriksaanDropdown(true)}
+                  className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="Cari nama pemeriksaan..."
+                  required
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+              
+              {showPemeriksaanDropdown && filteredPemeriksaan.length > 0 && (
+                <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-h-64 overflow-y-auto">
+                  {filteredPemeriksaan.map((item, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => handlePemeriksaanSelect(item.NamaPemeriksaan)}
+                      className="w-full text-left px-4 py-3 hover:bg-slate-700 transition-colors text-white border-b border-slate-700 last:border-b-0"
+                    >
+                      <div className="font-medium">{item.NamaPemeriksaan}</div>
+                      <div className="text-xs text-slate-400 mt-1">Tahun: {item.Tahun}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {showPemeriksaanDropdown && filteredPemeriksaan.length === 0 && pemeriksaanSearch && (
+                <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-600 rounded-lg shadow-xl p-4">
+                  <p className="text-slate-400 text-sm">Tiada pemeriksaan dijumpai untuk &quot;{pemeriksaanSearch}&quot;</p>
+                </div>
+              )}
+              
+              <p className="text-xs text-slate-400 mt-2">
+                📋 Senarai pemeriksaan untuk tahun {new Date().getFullYear()} dari sistem MOE
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

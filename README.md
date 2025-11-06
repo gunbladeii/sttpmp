@@ -1,6 +1,6 @@
 # STTPMP - Sistem Tahap Tindakan Perakuan Menteri Pendidikan
 
-A comprehensive government tracking system for monitoring feedback and recommendations from education departments and state education departments (JPN).
+**A comprehensive government tracking system for monitoring feedback and recommendations from education departments and state education departments (JPN).**
 
 ## 🏛️ About STTPMP
 

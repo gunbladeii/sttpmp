@@ -14,19 +14,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "STTPMP - Sistem Tahap Tindakan Perakuan Menteri Pendidikan",
-  description: "Sistem pemantauan komprehensif untuk maklum balas dan syor daripada bahagian pendidikan dan Jabatan Pendidikan Negeri (JPN)",
-  keywords: "MOE, Kementerian Pendidikan Malaysia, STTPMP, pemantauan, syor, feedback",
-  icons: {
-    icon: [
-      { url: '/logoJN.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: '32x32' }
-    ],
-    shortcut: '/logoJN.svg',
-    apple: '/logoJN.svg',
-  },
-};
+export const metadata = {
+  title: "STTPMP - Dashboard Status Tindakan Terhadap Perakuan Menteri Pendidkan",
+  description: "Government system for tracking ministerial approval recommendations",
+}
 
 export default function RootLayout({
   children,

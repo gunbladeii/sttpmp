@@ -1,5 +1,5 @@
 -- STTPMP Database Schema
--- Sistem Tahap Tindakan Perakuan Menteri Pendidikan
+-- Dashboard Status Tindakan Terhadap Perakuan Menteri Pendidkan
 
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

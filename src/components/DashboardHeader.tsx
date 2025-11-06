@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuthSimple'
 import BrandLogo from '@/components/BrandLogo'
+import NotificationBell from '@/components/NotificationBell'
 
 export default function DashboardHeader() {
   const router = useRouter()
@@ -103,6 +104,9 @@ export default function DashboardHeader() {
 
           {/* User Menu */}
           <div className="flex items-center space-x-6">
+            {/* Notification Bell */}
+            <NotificationBell />
+            
             {/* User Info */}
             <div className="text-sm">
               <span className="font-semibold text-white">{user.name}</span>
