@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { sendApprovalEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,19 +56,33 @@ export async function POST(request: NextRequest) {
       updateData.department_id = department_id
     }
 
-    // Add jpn_id for penyelaras_jpn
-    if (assignedRole === 'penyelaras_jpn' && jpn_id) {
+    // Add jpn_id for penyelaras_jpn and penyelaras_jnn
+    if ((assignedRole === 'penyelaras_jpn' || assignedRole === 'penyelaras_jnn') && jpn_id) {
       updateData.jpn_id = jpn_id
     }
 
-    const { error: updateError } = await supabaseAdmin
+    const { data: updatedUser, error: updateError } = await supabaseAdmin
       .from('users')
       .update(updateData)
       .eq('id', requestId)
+      .select('email, name, role')
+      .single()
 
     if (updateError) {
       console.error('Error approving registration:', updateError)
       return NextResponse.json({ error: 'Failed to approve registration' }, { status: 500 })
+    }
+
+    // Send approval email
+    if (updatedUser) {
+      const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`
+      
+      await sendApprovalEmail({
+        to: updatedUser.email,
+        userName: updatedUser.name || updatedUser.email,
+        userRole: updatedUser.role,
+        loginUrl,
+      })
     }
 
     return NextResponse.json({
