@@ -146,7 +146,7 @@ export default function RegisterPage() {
         <div className="cloudpeak-card p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-md text-sm">
+              <div className="bg-red-600/20 border-2 border-red-500 text-white px-4 py-3 rounded-md text-sm font-medium shadow-lg">
                 {error.split('\n').map((line, index) => (
                   <div key={index}>{line}</div>
                 ))}

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate role and required fields
-    const allowedRoles = ['pemantau', 'penyelaras_bahagian', 'penyelaras_jpn', 'peneraju_pemeriksaan', 'admin']
+    const allowedRoles = ['pemantau', 'penyelaras_bahagian', 'penyelaras_jpn', 'penyelaras_jnn', 'peneraju_pemeriksaan', 'admin']
     if (!allowedRoles.includes(newRole)) {
       return NextResponse.json({ error: 'Role tidak sah' }, { status: 400 })
     }
@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
     if (newRole === 'penyelaras_bahagian' && !department_id) {
       return NextResponse.json({ error: 'Bahagian diperlukan untuk Penyelaras Bahagian' }, { status: 400 })
     }
-    if (newRole === 'penyelaras_jpn' && !jpn_id) {
-      return NextResponse.json({ error: 'JPN diperlukan untuk Penyelaras JPN' }, { status: 400 })
+    if ((newRole === 'penyelaras_jpn' || newRole === 'penyelaras_jnn') && !jpn_id) {
+      return NextResponse.json({ error: 'JPN diperlukan untuk Penyelaras JPN/JNN' }, { status: 400 })
     }
 
     // Prepare update data
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       updateData.sector = sector
     } else if (newRole === 'penyelaras_bahagian' && department_id) {
       updateData.department_id = department_id
-    } else if (newRole === 'penyelaras_jpn' && jpn_id) {
+    } else if ((newRole === 'penyelaras_jpn' || newRole === 'penyelaras_jnn') && jpn_id) {
       updateData.jpn_id = jpn_id
     }
 

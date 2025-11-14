@@ -21,6 +21,12 @@ interface JPN {
 interface Pemeriksaan {
   NamaPemeriksaan: string
   Tahun: string
+  KodJenisPemeriksaan: string
+}
+
+interface JenisPemeriksaan {
+  KodPemeriksaan: string
+  Pemeriksaan: string
 }
 
 export default function CreateSyorPage() {
@@ -34,6 +40,8 @@ export default function CreateSyorPage() {
   const [filteredPemeriksaan, setFilteredPemeriksaan] = useState<Pemeriksaan[]>([])
   const [pemeriksaanSearch, setPemeriksaanSearch] = useState('')
   const [showPemeriksaanDropdown, setShowPemeriksaanDropdown] = useState(false)
+  const [jenisPemeriksaanList, setJenisPemeriksaanList] = useState<JenisPemeriksaan[]>([])
+  const [selectedJenisPemeriksaan, setSelectedJenisPemeriksaan] = useState<string>('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -82,19 +90,30 @@ export default function CreateSyorPage() {
         // Fetch pemeriksaan data from MOE API
         try {
           const currentYear = new Date().getFullYear().toString()
-          const response = await fetch('https://enazir.moe.gov.my/APIcall.php/tknamapemeriksaan')
           
-          if (!response.ok) {
+          // Fetch both APIs in parallel
+          const [pemeriksaanResponse, jenisPemeriksaanResponse] = await Promise.all([
+            fetch('https://enazir.moe.gov.my/APIcall.php/tknamapemeriksaan'),
+            fetch('https://enazir.moe.gov.my/APIcall.php/tkjenispemeriksaan')
+          ])
+          
+          if (!pemeriksaanResponse.ok || !jenisPemeriksaanResponse.ok) {
             throw new Error('Failed to fetch pemeriksaan data')
           }
 
-          const data = await response.json()
+          const pemeriksaanData = await pemeriksaanResponse.json()
+          const jenisPemeriksaanData = await jenisPemeriksaanResponse.json()
+          
+          // Debug: Check API data structure
+          console.log('Pemeriksaan Data Sample:', pemeriksaanData[0])
+          console.log('Jenis Pemeriksaan Data Sample:', jenisPemeriksaanData[0])
           
           // Filter by current year
-          const currentYearData = data.filter((item: Pemeriksaan) => item.Tahun === currentYear)
+          const currentYearData = pemeriksaanData.filter((item: Pemeriksaan) => item.Tahun === currentYear)
           
           setPemeriksaanList(currentYearData)
           setFilteredPemeriksaan(currentYearData)
+          setJenisPemeriksaanList(jenisPemeriksaanData)
         } catch (apiError) {
           console.error('Error fetching pemeriksaan:', apiError)
           // Don't block the form if API fails, just show warning
@@ -135,10 +154,28 @@ export default function CreateSyorPage() {
     }
   }, [])
 
-  const handlePemeriksaanSelect = (namaPemeriksaan: string) => {
-    setFormData({ ...formData, title: namaPemeriksaan })
-    setPemeriksaanSearch(namaPemeriksaan)
+  const handlePemeriksaanSelect = (pemeriksaan: Pemeriksaan) => {
+    setFormData({ ...formData, title: pemeriksaan.NamaPemeriksaan })
+    setPemeriksaanSearch(pemeriksaan.NamaPemeriksaan)
     setShowPemeriksaanDropdown(false)
+    
+    // Debug: Check selected pemeriksaan and mapping
+    console.log('Selected Pemeriksaan:', pemeriksaan)
+    console.log('KodJenisPemeriksaan:', pemeriksaan.KodJenisPemeriksaan)
+    console.log('Jenis Pemeriksaan List:', jenisPemeriksaanList)
+    
+    // Auto-fill Jenis Pemeriksaan based on KodJenisPemeriksaan
+    const jenisPemeriksaan = jenisPemeriksaanList.find(
+      jp => jp.KodPemeriksaan === pemeriksaan.KodJenisPemeriksaan
+    )
+    
+    console.log('Found Jenis Pemeriksaan:', jenisPemeriksaan)
+    
+    if (jenisPemeriksaan) {
+      setSelectedJenisPemeriksaan(jenisPemeriksaan.Pemeriksaan)
+    } else {
+      setSelectedJenisPemeriksaan('Tidak diketahui')
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -333,7 +370,7 @@ export default function CreateSyorPage() {
                     <button
                       key={index}
                       type="button"
-                      onClick={() => handlePemeriksaanSelect(item.NamaPemeriksaan)}
+                      onClick={() => handlePemeriksaanSelect(item)}
                       className="w-full text-left px-4 py-3 hover:bg-slate-700 transition-colors text-white border-b border-slate-700 last:border-b-0"
                     >
                       <div className="font-medium">{item.NamaPemeriksaan}</div>
@@ -448,18 +485,12 @@ export default function CreateSyorPage() {
                 <label className="block text-sm font-medium text-slate-300 mb-3">
                   Jenis Pemeriksaan
                 </label>
-                <select
-                  name="pemeriksaan_type"
-                  value={formData.pemeriksaan_type}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                >
-                  <option value="mata_pelajaran">Mata Pelajaran</option>
-                  <option value="keciciran_murid">Keciciran Murid</option>
-                  <option value="infrastruktur">Infrastruktur</option>
-                  <option value="kualiti_guru">Kualiti Guru</option>
-                  <option value="kurikulum">Kurikulum</option>
-                </select>
+                <div className="w-full px-4 py-3 border border-slate-600 bg-slate-700 bg-opacity-50 rounded-lg text-slate-300">
+                  {selectedJenisPemeriksaan || <span className="text-slate-500">Pilih tajuk pemeriksaan dahulu...</span>}
+                </div>
+                <p className="text-xs text-slate-400 mt-2">
+                  📝 Jenis pemeriksaan akan auto-diisi berdasarkan tajuk pemeriksaan yang dipilih
+                </p>
               </div>
             </div>
 

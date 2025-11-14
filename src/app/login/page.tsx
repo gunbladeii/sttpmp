@@ -1,11 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuthSimple'
 import { LoginCredentials } from '@/types'
 import BrandLogo from '@/components/BrandLogo'
+import Script from 'next/script'
+
+// Declare grecaptcha for TypeScript
+declare global {
+  interface Window {
+    grecaptcha: {
+      ready: (callback: () => void) => void
+      execute: (siteKey: string, options: { action: string }) => Promise<string>
+    }
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -18,6 +29,19 @@ export default function LoginPage() {
   
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [recaptchaReady, setRecaptchaReady] = useState(false)
+  const [recaptchaError, setRecaptchaError] = useState('')
+
+  const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''
+
+  // Wait for reCAPTCHA to load
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.grecaptcha) {
+      window.grecaptcha.ready(() => {
+        setRecaptchaReady(true)
+      })
+    }
+  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -27,6 +51,41 @@ export default function LoginPage() {
     }))
     
     if (error) clearError()
+    if (recaptchaError) setRecaptchaError('')
+  }
+
+  const verifyRecaptcha = async (): Promise<boolean> => {
+    if (!recaptchaReady) {
+      setRecaptchaError('Sistem keselamatan belum siap. Sila cuba lagi.')
+      return false
+    }
+
+    try {
+      // Get reCAPTCHA token
+      const token = await window.grecaptcha.execute(siteKey, { action: 'login' })
+      
+      // Verify token with our API
+      const response = await fetch('/api/verify-recaptcha', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      })
+
+      const data = await response.json()
+
+      if (!data.success) {
+        setRecaptchaError(data.message || 'Verifikasi keselamatan gagal')
+        return false
+      }
+
+      return true
+    } catch (error) {
+      console.error('reCAPTCHA error:', error)
+      setRecaptchaError('Ralat semasa verifikasi keselamatan')
+      return false
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,6 +94,15 @@ export default function LoginPage() {
     if (isSubmitting) return
     
     setIsSubmitting(true)
+    setRecaptchaError('')
+
+    // Verify reCAPTCHA first
+    const isHuman = await verifyRecaptcha()
+    
+    if (!isHuman) {
+      setIsSubmitting(false)
+      return
+    }
     
     const result = await login(formData)
     
@@ -46,7 +114,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-6" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
+    <>
+      {/* Load reCAPTCHA script */}
+      <Script
+        src={`https://www.google.com/recaptcha/api.js?render=${siteKey}`}
+        strategy="lazyOnload"
+        onLoad={() => {
+          if (window.grecaptcha) {
+            window.grecaptcha.ready(() => {
+              setRecaptchaReady(true)
+            })
+          }
+        }}
+      />
+
+      <div className="min-h-screen flex items-center justify-center py-12 px-6" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
       <div className="max-w-md w-full space-y-8">
         <div>
           <BrandLogo variant="page" />
@@ -55,12 +137,37 @@ export default function LoginPage() {
           </p>
         </div>
         
-        
         <div className="cloudpeak-card p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm">
                 {error}
+              </div>
+            )}
+
+            {recaptchaError && (
+              <div className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 px-4 py-3 rounded-lg text-sm flex items-start">
+                <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{recaptchaError}</span>
+              </div>
+            )}
+
+            {/* Security Badge */}
+            {!recaptchaReady && (
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 flex items-center text-sm text-blue-300">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400 mr-3"></div>
+                <span>Memuatkan sistem keselamatan...</span>
+              </div>
+            )}
+
+            {recaptchaReady && (
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 flex items-center text-sm text-green-300">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>🔒 Perlindungan Bot Aktif (reCAPTCHA v3)</span>
               </div>
             )}
 
@@ -195,8 +302,24 @@ export default function LoginPage() {
               </div>
             </div>
           </div>
+
+          {/* reCAPTCHA Badge Info */}
+          <div className="mt-4 text-center">
+            <p className="text-xs text-slate-400">
+              Laman ini dilindungi oleh reCAPTCHA dan tertakluk kepada{' '}
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                Dasar Privasi
+              </a>{' '}
+              dan{' '}
+              <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                Terma Perkhidmatan
+              </a>{' '}
+              Google.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

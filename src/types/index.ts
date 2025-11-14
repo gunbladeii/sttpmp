@@ -1,6 +1,6 @@
 export type StatusType = 'belum_selesai' | 'dalam_tindakan' | 'selesai'
 export type PriorityType = 'rendah' | 'sederhana' | 'tinggi' | 'kritikal'
-export type RoleType = 'admin' | 'peneraju_pemeriksaan' | 'penyelaras_bahagian' | 'penyelaras_jpn' | 'pemantau'
+export type RoleType = 'admin' | 'peneraju_pemeriksaan' | 'penyelaras_bahagian' | 'penyelaras_jpn' | 'penyelaras_jnn' | 'pemantau'
 export type PemeriksaanType = 'mata_pelajaran' | 'keciciran_murid' | 'infrastruktur' | 'kualiti_guru' | 'kurikulum'
 
 export interface User {

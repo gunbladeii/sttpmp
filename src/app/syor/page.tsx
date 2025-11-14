@@ -70,8 +70,9 @@ export default function SyorList() {
         if (user?.role === 'penyelaras_bahagian' && user?.department_id) {
           // Penyelaras Bahagian: only see syor assigned to their department
           query = query.eq('assigned_to_department', user.department_id)
-        } else if (user?.role === 'penyelaras_jpn' && user?.jpn_id) {
-          // Penyelaras JPN: only see syor assigned to their JPN
+        } else if ((user?.role === 'penyelaras_jpn' || user?.role === 'penyelaras_jnn') && user?.jpn_id) {
+          // Penyelaras JPN & JNN: only see syor assigned to their JPN
+          // (JNN has read-only access, JPN has edit access)
           query = query.eq('assigned_to_jpn', user.jpn_id)
         } else if (user?.role === 'peneraju_pemeriksaan' && user?.sector) {
           // Peneraju Pemeriksaan: see syor created by users in their sector
@@ -179,6 +180,12 @@ export default function SyorList() {
                 {user?.role === 'penyelaras_jpn' && userDetails?.jpn && (
                   <p className="text-sm text-green-400 font-medium bg-green-500/10 px-3 py-1 rounded-full inline-block">
                     🏢 Melihat syor untuk JPN: <span className="font-bold">{userDetails.jpn.name}, {userDetails.jpn.state}</span>
+                  </p>
+                )}
+                {user?.role === 'penyelaras_jnn' && userDetails?.jpn && (
+                  <p className="text-sm text-teal-400 font-medium bg-teal-500/10 px-3 py-1 rounded-full inline-block">
+                    🏢 Melihat syor untuk JPN: <span className="font-bold">{userDetails.jpn.name}, {userDetails.jpn.state}</span>
+                    <span className="ml-2 text-xs">(VIEW ONLY)</span>
                   </p>
                 )}
                 {user?.role === 'peneraju_pemeriksaan' && userDetails?.sector && (

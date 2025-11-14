@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       .insert({
         email,
         name,
-        role: 'pemantau',
+        role: null, // No default role - admin must assign during approval
         password_hash: `hashed_${password}`,
         password_plain: password,
         department_id: department_id && department_id.trim() !== '' ? department_id : null,

@@ -45,6 +45,7 @@ const roleOptions = [
   { value: 'pemantau', label: 'Pemantau' },
   { value: 'penyelaras_bahagian', label: 'Penyelaras Bahagian' },
   { value: 'penyelaras_jpn', label: 'Penyelaras JPN' },
+  { value: 'penyelaras_jnn', label: 'Penyelaras JNN (Read-Only)' },
   { value: 'peneraju_pemeriksaan', label: 'Peneraju Pemeriksaan' },
   { value: 'admin', label: 'Admin' }
 ]
@@ -75,6 +76,7 @@ const getRoleColor = (role: string) => {
     case 'peneraju_pemeriksaan': return 'bg-purple-500/20 text-purple-300 border-purple-500/30'
     case 'penyelaras_bahagian': return 'bg-blue-500/20 text-blue-300 border-blue-500/30'
     case 'penyelaras_jpn': return 'bg-green-500/20 text-green-300 border-green-500/30'
+    case 'penyelaras_jnn': return 'bg-teal-500/20 text-teal-300 border-teal-500/30'
     case 'pemantau': return 'bg-slate-500/20 text-slate-300 border-slate-500/30'
     default: return 'bg-slate-500/20 text-slate-300 border-slate-500/30'
   }
@@ -96,6 +98,11 @@ export default function AdminUsersPage() {
     jpn_id: ''
   })
   const [isUpdating, setIsUpdating] = useState(false)
+  
+  // Pagination and search states
+  const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   // Check authentication and admin access
   useEffect(() => {
@@ -207,7 +214,7 @@ export default function AdminUsersPage() {
         updateData.sector = formData.sector || null
       } else if (formData.role === 'penyelaras_bahagian') {
         updateData.department_id = formData.department_id || null
-      } else if (formData.role === 'penyelaras_jpn') {
+      } else if (formData.role === 'penyelaras_jpn' || formData.role === 'penyelaras_jnn') {
         updateData.jpn_id = formData.jpn_id || null
       }
 
@@ -244,6 +251,32 @@ export default function AdminUsersPage() {
     setFormData({ role: '', sector: '', department_id: '', jpn_id: '' })
   }
 
+  // Filter and pagination logic
+  const filteredUsers = users.filter(u => {
+    if (!searchQuery.trim()) return true
+    
+    const query = searchQuery.toLowerCase()
+    const matchesName = u.name.toLowerCase().includes(query)
+    const matchesEmail = u.email.toLowerCase().includes(query)
+    const matchesRole = getRoleLabel(u.role).toLowerCase().includes(query)
+    const matchesDepartment = u.department?.name.toLowerCase().includes(query)
+    const matchesJPN = u.jpn?.name.toLowerCase().includes(query)
+    const matchesSector = u.sector?.toLowerCase().includes(query)
+    
+    return matchesName || matchesEmail || matchesRole || matchesDepartment || matchesJPN || matchesSector
+  })
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex)
+
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery])
+
   // Show loading if either auth is loading or data is loading
   if (authLoading || isLoading) {
     return (
@@ -270,12 +303,42 @@ export default function AdminUsersPage() {
         {/* Users Table */}
         <div className="cloudpeak-card">
           <div className="px-8 py-6 border-b border-slate-700/30">
-            <h2 className="text-xl font-medium text-white">Senarai Pengguna Sistem</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-medium text-white">Senarai Pengguna Sistem</h2>
+              
+              {/* Search Bar */}
+              <div className="relative w-96">
+                <input
+                  type="text"
+                  placeholder="Cari pengguna (nama/emel/peranan)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 pl-10 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-slate-400"
+                />
+                <svg
+                  className="absolute left-3 top-3 h-5 w-5 text-slate-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+            
+            {/* Results count */}
+            <div className="mt-4 text-sm text-slate-400">
+              Menunjukkan {paginatedUsers.length} daripada {filteredUsers.length} pengguna
+              {searchQuery && ` (ditapis daripada ${users.length} jumlah pengguna)`}
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-700/30">
               <thead className="bg-slate-800/30">
                 <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                    #
+                  </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
                     Pengguna
                   </th>
@@ -297,8 +360,34 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
                 <tbody className="divide-y divide-slate-700/30">
-                  {users.map((user) => (
+                  {paginatedUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center">
+                        <div className="text-slate-400">
+                          {searchQuery ? (
+                            <>
+                              <svg className="w-12 h-12 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                              </svg>
+                              <p>Tiada pengguna dijumpai untuk "{searchQuery}"</p>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-12 h-12 mx-auto mb-4 opacity-50" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 4a4 4 0 014 4 4 4 0 01-4 4 4 4 0 01-4-4 4 4 0 014-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4z" />
+                              </svg>
+                              <p>Tiada pengguna dalam sistem</p>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedUsers.map((user, index) => (
                     <tr key={user.id} className="hover:bg-slate-800/20 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 font-mono">
+                        {startIndex + index + 1}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-white">
@@ -322,8 +411,11 @@ export default function AdminUsersPage() {
                           {user.role === 'penyelaras_bahagian' && user.department && (
                             <span className="text-blue-300">{user.department.name}</span>
                           )}
-                          {user.role === 'penyelaras_jpn' && user.jpn && (
-                            <span className="text-green-300">{user.jpn.name}</span>
+                          {(user.role === 'penyelaras_jpn' || user.role === 'penyelaras_jnn') && user.jpn && (
+                            <span className={user.role === 'penyelaras_jnn' ? 'text-teal-300' : 'text-green-300'}>
+                              {user.jpn.name}
+                              {user.role === 'penyelaras_jnn' && <span className="text-xs ml-2">(View Only)</span>}
+                            </span>
                           )}
                           {!user.sector && !user.department && !user.jpn && (
                             <span className="text-slate-400">-</span>
@@ -343,30 +435,107 @@ export default function AdminUsersPage() {
                         {new Date(user.created_at).toLocaleDateString('ms-MY')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-3">
+                        <div className="flex space-x-2">
+                          {/* Edit Role Icon */}
                           <button
                             onClick={() => handleEditUser(user)}
-                            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm transition-all transform hover:scale-105 shadow-lg"
+                            title="Edit Role"
+                            className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all transform hover:scale-110 shadow-lg"
                           >
-                            Edit Role
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
                           </button>
+                          
+                          {/* Toggle Active/Inactive Icon */}
                           <button
                             onClick={() => toggleUserStatus(user.id, user.is_active)}
-                            className={`px-4 py-2 rounded-lg text-sm transition-all transform hover:scale-105 shadow-lg ${
+                            title={user.is_active ? 'Nyahaktifkan' : 'Aktifkan'}
+                            className={`p-2 rounded-lg transition-all transform hover:scale-110 shadow-lg ${
                               user.is_active 
                                 ? 'bg-red-600 hover:bg-red-500 text-white' 
                                 : 'bg-green-600 hover:bg-green-500 text-white'
                             }`}
                           >
-                            {user.is_active ? 'Nyahaktif' : 'Aktifkan'}
+                            {user.is_active ? (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                              </svg>
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            )}
                           </button>
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ))
+                  )}
                 </tbody>
               </table>
             </div>
+            
+            {/* Pagination Controls */}
+            {filteredUsers.length > itemsPerPage && (
+              <div className="px-8 py-6 border-t border-slate-700/30">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-slate-400">
+                    Halaman {currentPage} daripada {totalPages}
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      ← Sebelum
+                    </button>
+                    
+                    {/* Page numbers */}
+                    <div className="flex space-x-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                        // Show first page, last page, current page, and pages around current
+                        if (
+                          page === 1 ||
+                          page === totalPages ||
+                          (page >= currentPage - 1 && page <= currentPage + 1)
+                        ) {
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`px-4 py-2 rounded-lg transition-all ${
+                                currentPage === page
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-slate-700 hover:bg-slate-600 text-white'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          )
+                        } else if (
+                          page === currentPage - 2 ||
+                          page === currentPage + 2
+                        ) {
+                          return <span key={page} className="px-2 py-2 text-slate-400">...</span>
+                        }
+                        return null
+                      })}
+                    </div>
+                    
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Seterusnya →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
         </div>
 
         {/* Edit User Modal */}
@@ -439,8 +608,8 @@ export default function AdminUsersPage() {
                 </div>
               )}
 
-              {/* JPN Selection for Penyelaras JPN */}
-              {formData.role === 'penyelaras_jpn' && (
+              {/* JPN Selection for Penyelaras JPN and Penyelaras JNN */}
+              {(formData.role === 'penyelaras_jpn' || formData.role === 'penyelaras_jnn') && (
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-white mb-3">
                     JPN
@@ -455,6 +624,11 @@ export default function AdminUsersPage() {
                       <option key={jpn.id} value={jpn.id}>{jpn.name} ({jpn.state})</option>
                     ))}
                   </select>
+                  {formData.role === 'penyelaras_jnn' && (
+                    <p className="mt-2 text-xs text-teal-400">
+                      ℹ️ Penyelaras JNN mempunyai akses VIEW SAHAJA (read-only)
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -473,7 +647,7 @@ export default function AdminUsersPage() {
                   disabled={isUpdating || !formData.role || 
                     (formData.role === 'peneraju_pemeriksaan' && !formData.sector) ||
                     (formData.role === 'penyelaras_bahagian' && !formData.department_id) ||
-                    (formData.role === 'penyelaras_jpn' && !formData.jpn_id)
+                    ((formData.role === 'penyelaras_jpn' || formData.role === 'penyelaras_jnn') && !formData.jpn_id)
                   }
                   className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 >

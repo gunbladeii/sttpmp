@@ -195,14 +195,12 @@ export default function SyorDetailsPage() {
       const response = await fetch(`/api/syor/${syorId}/documents`);
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch documents');
-      }
-
+      // Always set documents even if response not ok (API returns empty array on error)
       setDocuments(result.documents || [])
 
     } catch (error) {
       console.error('Error fetching documents:', error)
+      setDocuments([]) // Set empty array on fetch failure
     }
   }
 
@@ -414,6 +412,7 @@ export default function SyorDetailsPage() {
     user.role === 'peneraju_pemeriksaan' || 
     (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
     (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
+    // Note: penyelaras_jnn NOT included - they have read-only access
   )
 
   const canEditBasicInfo = user && (user.role === 'admin' || user.role === 'peneraju_pemeriksaan')
@@ -423,6 +422,7 @@ export default function SyorDetailsPage() {
     user.role === 'peneraju_pemeriksaan' ||
     (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
     (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
+    // Note: penyelaras_jnn NOT included - they can only view, not edit
   )
 
   const canUploadDocuments = user && syor && (
@@ -430,9 +430,13 @@ export default function SyorDetailsPage() {
     user.role === 'peneraju_pemeriksaan' ||
     (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
     (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
+    // Note: penyelaras_jnn NOT included - they cannot upload documents
   )
 
   const canDeleteHistory = user && (user.role === 'admin' || user.role === 'peneraju_pemeriksaan')
+  
+  // Read-only indicator for penyelaras_jnn
+  const isReadOnly = user && user.role === 'penyelaras_jnn'
 
   // Show loading if either auth is loading or data is loading
   if (authLoading || loading) {

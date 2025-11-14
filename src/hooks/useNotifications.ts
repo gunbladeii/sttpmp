@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './useAuthSimple'
 
@@ -22,14 +22,22 @@ export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const isFetchingRef = useRef(false)
 
-  // Fetch notifications
-  const fetchNotifications = async () => {
+  // Fetch notifications with memoization
+  const fetchNotifications = useCallback(async () => {
     if (!user) {
       console.log('useNotifications: No user found, skipping fetch')
       return
     }
 
+    // Prevent concurrent fetches
+    if (isFetchingRef.current) {
+      console.log('useNotifications: Already fetching, skipping')
+      return
+    }
+
+    isFetchingRef.current = true
     console.log('useNotifications: Fetching notifications for user:', user.id)
 
     try {
@@ -54,8 +62,9 @@ export function useNotifications() {
       console.error('Error fetching notifications:', error)
     } finally {
       setLoading(false)
+      isFetchingRef.current = false
     }
-  }
+  }, [user])
 
   // Mark notification as read
   const markAsRead = async (notificationId: string) => {
@@ -197,7 +206,7 @@ export function useNotifications() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [user])
+  }, [user, fetchNotifications])
 
   return {
     notifications,

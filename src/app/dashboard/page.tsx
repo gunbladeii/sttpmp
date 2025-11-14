@@ -203,7 +203,7 @@ export default function Dashboard() {
         // Apply role-based filtering for syor
         if (user?.role === 'penyelaras_bahagian' && user?.department_id) {
           syorQuery = syorQuery.eq('assigned_to_department', user.department_id)
-        } else if (user?.role === 'penyelaras_jpn' && user?.jpn_id) {
+        } else if ((user?.role === 'penyelaras_jpn' || user?.role === 'penyelaras_jnn') && user?.jpn_id) {
           syorQuery = syorQuery.eq('assigned_to_jpn', user.jpn_id)
         } else if (user?.role === 'peneraju_pemeriksaan' && user?.sector) {
           // Peneraju Pemeriksaan: see syor created by users in their sector
@@ -241,7 +241,7 @@ export default function Dashboard() {
         // Apply same role-based filtering for all syor
         if (user?.role === 'penyelaras_bahagian' && user?.department_id) {
           allSyorQuery = allSyorQuery.eq('assigned_to_department', user.department_id)
-        } else if (user?.role === 'penyelaras_jpn' && user?.jpn_id) {
+        } else if ((user?.role === 'penyelaras_jpn' || user?.role === 'penyelaras_jnn') && user?.jpn_id) {
           allSyorQuery = allSyorQuery.eq('assigned_to_jpn', user.jpn_id)
         } else if (user?.role === 'peneraju_pemeriksaan' && user?.sector) {
           // Reuse the same user filtering logic
@@ -375,6 +375,12 @@ export default function Dashboard() {
             {user?.role === 'penyelaras_jpn' && userDetails?.jpn && (
               <p className="text-sm text-green-400 font-medium bg-green-500/10 px-3 py-1 rounded-full inline-block">
                 🏢 Dashboard untuk JPN: <span className="font-bold">{userDetails.jpn.name}, {userDetails.jpn.state}</span>
+              </p>
+            )}
+            {user?.role === 'penyelaras_jnn' && userDetails?.jpn && (
+              <p className="text-sm text-teal-400 font-medium bg-teal-500/10 px-3 py-1 rounded-full inline-block">
+                🏢 Dashboard untuk JPN: <span className="font-bold">{userDetails.jpn.name}, {userDetails.jpn.state}</span>
+                <span className="ml-2 text-xs">(VIEW ONLY)</span>
               </p>
             )}
             {user?.role === 'peneraju_pemeriksaan' && userDetails?.sector && (

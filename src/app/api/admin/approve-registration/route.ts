@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request: NextRequest) {
   try {
-    const { requestId, assignedRole = 'pemantau' } = await request.json()
+    const { requestId, assignedRole, sector, department_id, jpn_id } = await request.json()
     
     // Get user email from headers (sent by client)
     const userEmail = request.headers.get('x-user-email')
@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized - No user email' }, { status: 401 })
     }
 
-    if (!requestId) {
-      return NextResponse.json({ error: 'Request ID is required' }, { status: 400 })
+    if (!requestId || !assignedRole) {
+      return NextResponse.json({ error: 'Request ID and role are required' }, { status: 400 })
     }
 
     // Verify user is admin
@@ -38,14 +38,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Update the user record to approve and activate them (for real users)
+    const updateData: any = {
+      is_approved: true,
+      is_active: true,
+      role: assignedRole,
+      email_verified: true
+    }
+
+    // Add sector for peneraju_pemeriksaan
+    if (assignedRole === 'peneraju_pemeriksaan' && sector) {
+      updateData.sector = sector
+    }
+
+    // Add department_id for penyelaras_bahagian
+    if (assignedRole === 'penyelaras_bahagian' && department_id) {
+      updateData.department_id = department_id
+    }
+
+    // Add jpn_id for penyelaras_jpn
+    if (assignedRole === 'penyelaras_jpn' && jpn_id) {
+      updateData.jpn_id = jpn_id
+    }
+
     const { error: updateError } = await supabaseAdmin
       .from('users')
-      .update({
-        is_approved: true,
-        is_active: true,
-        role: assignedRole,
-        email_verified: true
-      })
+      .update(updateData)
       .eq('id', requestId)
 
     if (updateError) {

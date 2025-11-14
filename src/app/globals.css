@@ -46,8 +46,15 @@ body {
   background: var(--background-gradient);
   background-attachment: fixed;
   color: var(--foreground);
-  font-family: var(--font-geist-sans), 'Inter', system-ui, sans-serif;
+  /* MYDS Typography: Inter for body text */
+  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
   min-height: 100vh;
+}
+
+/* MYDS Typography: Poppins for headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-poppins), 'Poppins', system-ui, sans-serif;
+  font-weight: 600; /* Semibold as per MYDS */
 }
 
 /* CloudPeak-inspired card styling */

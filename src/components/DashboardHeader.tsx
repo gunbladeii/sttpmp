@@ -48,7 +48,7 @@ export default function DashboardHeader() {
   if (!user) return null
 
   return (
-    <header className="cloudpeak-card mx-4 mt-4 mb-0">
+    <header className="cloudpeak-card mx-4 mt-4 mb-0 relative">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
         <div className="flex justify-between items-center h-20">
           {/* Logo and Title */}
@@ -115,12 +115,17 @@ export default function DashboardHeader() {
                   ? 'bg-red-500/20 text-red-300 border-red-500/30' 
                   : user.role === 'peneraju_pemeriksaan'
                   ? 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                  : user.role === 'penyelaras_jpn'
+                  ? 'bg-green-500/20 text-green-300 border-green-500/30'
+                  : user.role === 'penyelaras_jnn'
+                  ? 'bg-teal-500/20 text-teal-300 border-teal-500/30'
                   : 'bg-slate-500/20 text-slate-300 border-slate-500/30'
               }`}>
                 {user.role === 'admin' ? 'Admin' :
                  user.role === 'peneraju_pemeriksaan' ? 'Peneraju' :
                  user.role === 'penyelaras_bahagian' ? 'Penyelaras Bahagian' :
                  user.role === 'penyelaras_jpn' ? 'Penyelaras JPN' :
+                 user.role === 'penyelaras_jnn' ? 'Penyelaras JNN' :
                  'Pemantau'}
               </span>
             </div>

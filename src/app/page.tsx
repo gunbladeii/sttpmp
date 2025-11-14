@@ -1,20 +1,36 @@
 import Link from "next/link";
-import Image from "next/image";
 import BrandLogo from "@/components/BrandLogo";
 
 export default function Home() {
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
-      {/* Header with Logo */}
-      <header className="border-b border-slate-700/30 cloudpeak-card border-r-0 border-l-0 border-t-0 rounded-none">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-center">
-            <BrandLogo variant="header" />
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Abstract Background with Malaysian Theme */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800"></div>
+      
+      {/* Abstract Brush Paint Elements */}
+      <div className="absolute inset-0 opacity-20">
+        {/* Top Right Yellow Brush - Represents Royal Yellow */}
+        <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full blur-3xl transform rotate-45"></div>
+        
+        {/* Left Blue Brush - Represents Unity */}
+        <div className="absolute top-1/4 -left-32 w-80 h-80 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-full blur-3xl"></div>
+        
+        {/* Bottom Right Red Brush - Represents Courage */}
+        <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-gradient-to-tl from-red-500 to-pink-500 rounded-full blur-3xl"></div>
+        
+        {/* Center Harmony Element */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-blue-600 via-purple-500 to-blue-600 rounded-full blur-3xl opacity-30"></div>
+      </div>
 
-      <div className="container mx-auto px-6 py-20">
+      {/* Subtle Grid Pattern Overlay */}
+      <div className="absolute inset-0 opacity-5" style={{
+        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                         linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)`,
+        backgroundSize: '50px 50px'
+      }}></div>
+
+      {/* Content */}
+      <div className="relative z-10 container mx-auto px-6 py-20">
         <div className="text-center mb-16">
           {/* Brand Logo Style Title */}
           <BrandLogo variant="hero" className="mb-8" />
@@ -35,7 +51,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 mb-16">
             {/* Traffic Light System Info */}
-            <div className="cloudpeak-card p-8">
+            <div className="cloudpeak-card p-8 backdrop-blur-xl bg-white/10 border border-white/20">
               <h3 className="text-xl font-semibold mb-6 text-white">Trafik Status STTPMP</h3>
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
@@ -60,7 +76,7 @@ export default function Home() {
             </div>
 
             {/* User Roles */}
-            <div className="cloudpeak-card p-8">
+            <div className="cloudpeak-card p-8 backdrop-blur-xl bg-white/10 border border-white/20">
               <h3 className="text-xl font-semibold mb-6 text-white">Peranan Pengguna</h3>
               <ul className="space-y-3 text-slate-300">
                 <li className="flex items-center gap-3">
@@ -88,7 +104,7 @@ export default function Home() {
           </div>
 
           {/* Key Features */}
-          <div className="cloudpeak-card p-8 mb-16">
+          <div className="cloudpeak-card p-8 mb-16 backdrop-blur-xl bg-white/10 border border-white/20">
             <h3 className="text-xl font-semibold mb-8 text-white text-center">Ciri-ciri Utama</h3>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="flex items-center gap-4 p-4 rounded-lg bg-slate-800/30 border border-slate-700/30">
@@ -121,7 +137,7 @@ export default function Home() {
           {/* Navigation Cards - Require Login */}
           <div className="grid md:grid-cols-3 gap-8">
             <Link href="/login" className="group">
-              <div className="cloudpeak-card p-8 hover:scale-105 transition-all duration-300 group-hover:shadow-2xl">
+              <div className="cloudpeak-card p-8 backdrop-blur-xl bg-white/10 border border-white/20 hover:scale-105 transition-all duration-300 group-hover:shadow-2xl group-hover:bg-white/15">
                 <div className="w-16 h-16 bg-blue-500/20 rounded-lg flex items-center justify-center mb-6">
                   <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -139,7 +155,7 @@ export default function Home() {
             </Link>
 
             <Link href="/login" className="group">
-              <div className="cloudpeak-card p-8 hover:scale-105 transition-all duration-300 group-hover:shadow-2xl">
+              <div className="cloudpeak-card p-8 backdrop-blur-xl bg-white/10 border border-white/20 hover:scale-105 transition-all duration-300 group-hover:shadow-2xl group-hover:bg-white/15">
                 <div className="w-16 h-16 bg-green-500/20 rounded-lg flex items-center justify-center mb-6">
                   <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -157,7 +173,7 @@ export default function Home() {
             </Link>
 
             <Link href="/login" className="group">
-              <div className="cloudpeak-card p-8 hover:scale-105 transition-all duration-300 group-hover:shadow-2xl">
+              <div className="cloudpeak-card p-8 backdrop-blur-xl bg-white/10 border border-white/20 hover:scale-105 transition-all duration-300 group-hover:shadow-2xl group-hover:bg-white/15">
                 <div className="w-16 h-16 bg-purple-500/20 rounded-lg flex items-center justify-center mb-6">
                   <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
