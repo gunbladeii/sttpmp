@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import { supabase } from '@/lib/supabase'
+import { sendApprovalEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient()
-    
     // Check if the requester is an admin
     const userEmail = req.headers.get('x-user-email')
     if (!userEmail) {
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create user in auth.users
-    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true
@@ -83,6 +83,8 @@ export async function POST(req: NextRequest) {
       name,
       role,
       is_active: true,
+      is_approved: true,
+      email_verified: true,
       created_at: new Date().toISOString()
     }
 
@@ -95,16 +97,31 @@ export async function POST(req: NextRequest) {
       userData.sector = sector
     }
 
-    const { error: userError } = await supabase
+    const { error: userError } = await supabaseAdmin
       .from('users')
       .insert([userData])
 
     if (userError) {
       // If user creation fails, delete the auth user
-      await supabase.auth.admin.deleteUser(authUser.user.id)
+      await supabaseAdmin.auth.admin.deleteUser(authUser.user.id)
       return NextResponse.json({ 
         error: `Ralat menyimpan maklumat pengguna: ${userError.message}` 
       }, { status: 400 })
+    }
+
+    // Send approval email notification
+    try {
+      const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`
+      
+      await sendApprovalEmail({
+        to: email,
+        userName: name || email,
+        userRole: role,
+        loginUrl,
+      })
+    } catch (emailError) {
+      console.error('Error sending email:', emailError)
+      // Don't fail the request if email fails, just log it
     }
 
     return NextResponse.json({ 
