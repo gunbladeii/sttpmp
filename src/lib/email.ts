@@ -1,6 +1,7 @@
-import { Resend } from 'resend'
+import * as brevo from '@getbrevo/brevo'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const apiInstance = new brevo.TransactionalEmailsApi()
+apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY || '')
 
 interface SendApprovalEmailParams {
   to: string
@@ -27,11 +28,7 @@ export async function sendApprovalEmail({
 
     const roleName = roleNames[userRole] || userRole
 
-    const data = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@sttpmp.gov.my',
-      to: [to],
-      subject: '✅ Akaun STTPMP Anda Telah Diluluskan',
-      html: `
+    const htmlContent = `
         <!DOCTYPE html>
         <html lang="ms">
         <head>
@@ -43,15 +40,10 @@ export async function sendApprovalEmail({
           
           <!-- Header with Logo -->
           <div style="background: linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
-            <!-- Logo Jata Negara & Jemaah Nazir -->
+            <!-- Logo Jemaah Nazir -->
             <div style="margin-bottom: 20px;">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" style="width: 60px; height: 72px; display: inline-block;">
-                <polygon points="50,10 61,35 88,35 66,52 72,78 50,65 28,78 34,52 12,35 39,35" fill="#FFD700" stroke="#B8860B" stroke-width="2"/>
-                <circle cx="50" cy="55" r="20" fill="#0038A8" stroke="#FFD700" stroke-width="2"/>
-                <text x="50" y="62" font-family="Arial" font-size="18" font-weight="bold" fill="#FFD700" text-anchor="middle">JN</text>
-              </svg>
+              <img src="https://raw.githubusercontent.com/gunbladeii/sttpmp/main/public/logoJN.png" alt="Logo Jemaah Nazir" style="width: 80px; height: auto; display: inline-block;" />
             </div>
-            <p style="color: #fbbf24; margin: 0 0 8px 0; font-size: 15px; font-weight: 600;">Jemaah Nazir</p>
             <h1 style="color: #a78bfa; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 2px;">STTPMP</h1>
             <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 14px;">Kementerian Pendidikan Malaysia</p>
           </div>
@@ -130,8 +122,15 @@ export async function sendApprovalEmail({
 
         </body>
         </html>
-      `,
-    })
+      `
+
+    const sendSmtpEmail = new brevo.SendSmtpEmail()
+    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STTPMP - Jemaah Nazir' }
+    sendSmtpEmail.to = [{ email: to, name: userName }]
+    sendSmtpEmail.subject = '✅ Akaun STTPMP Anda Telah Diluluskan'
+    sendSmtpEmail.htmlContent = htmlContent
+
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
 
     console.log('✅ Approval email sent successfully:', data)
     return { success: true, data }
@@ -153,11 +152,11 @@ export async function sendRejectionEmail({
   reason,
 }: SendRejectionEmailParams) {
   try {
-    const data = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'noreply@sttpmp.gov.my',
-      to: [to],
-      subject: '❌ Permohonan Akaun STTPMP',
-      html: `
+    const sendSmtpEmail = new brevo.SendSmtpEmail()
+    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STTPMP - Jemaah Nazir' }
+    sendSmtpEmail.to = [{ email: to, name: userName }]
+    sendSmtpEmail.subject = '❌ Permohonan Akaun STTPMP'
+    sendSmtpEmail.htmlContent = `
         <!DOCTYPE html>
         <html lang="ms">
         <head>
@@ -204,8 +203,9 @@ export async function sendRejectionEmail({
 
         </body>
         </html>
-      `,
-    })
+      `
+
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
 
     console.log('✅ Rejection email sent successfully:', data)
     return { success: true, data }
