@@ -497,7 +497,7 @@ export default function CreateSyorPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-3">
-                  Tarikh Akhir Tindakan <span className="text-red-400">*</span>
+                  Jangkaan Tarikh Akhir Tindakan <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="date"

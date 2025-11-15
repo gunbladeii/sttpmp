@@ -97,30 +97,6 @@ export default function SyorDetailsPage() {
     tindakan_status: 'belum_selesai' as const
   })
 
-  // Check authentication only after auth loading is complete
-  useEffect(() => {
-    console.log('Auth state check:', { authLoading, user: !!user, userEmail: user?.email })
-    
-    if (!authLoading && !user) {
-      console.log('Redirecting to login - no user found')
-      router.push('/login')
-    }
-  }, [user, authLoading, router])
-
-  // Don't render anything if still checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-      </div>
-    )
-  }
-
-  // Don't render if no user AND auth is not loading (will redirect)
-  if (!authLoading && !user) {
-    return null
-  }
-
   // Fetch syor details
   useEffect(() => {
     async function fetchSyorDetails() {
@@ -437,6 +413,14 @@ export default function SyorDetailsPage() {
   
   // Read-only indicator for penyelaras_jnn
   const isReadOnly = user && user.role === 'penyelaras_jnn'
+
+  // Check authentication - redirect if no user
+  useEffect(() => {
+    if (!authLoading && !user) {
+      console.log('Redirecting to login - no user found')
+      router.push('/login')
+    }
+  }, [user, authLoading, router])
 
   // Show loading if either auth is loading or data is loading
   if (authLoading || loading) {
@@ -770,7 +754,7 @@ export default function SyorDetailsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <label className="block text-sm font-medium text-white mb-3">
-                    Tarikh Akhir Tindakan
+                    Jangkaan Tarikh Akhir Tindakan
                   </label>
                   {isEditing && canEditBasicInfo ? (
                     <input

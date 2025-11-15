@@ -45,10 +45,31 @@ function SyorModal({ isOpen, onClose, title, syorList, status }: SyorModalProps)
                   ?.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
                 const latestStatus = sortedStatusTracking?.[0]
                 
+                // Calculate deadline urgency (same logic as syor page)
+                const today = new Date()
+                const responseDeadline = syor.response_deadline ? new Date(syor.response_deadline) : null
+                
+                const daysUntilDeadline = responseDeadline 
+                  ? Math.ceil((responseDeadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                  : null
+                
+                const isCompleted = latestStatus?.status === 'selesai'
+                const isOverdue = daysUntilDeadline !== null && daysUntilDeadline < 0 && !isCompleted
+                const isUrgent = daysUntilDeadline !== null && daysUntilDeadline <= 3 && daysUntilDeadline >= 0 && !isCompleted
+                const isApproaching = daysUntilDeadline !== null && daysUntilDeadline <= 7 && daysUntilDeadline > 3 && !isCompleted
+                
                 return (
                   <div 
                     key={syor.id} 
-                    className="bg-slate-700/30 border border-slate-600 rounded-lg p-4 hover:bg-slate-600/30 transition-colors cursor-pointer"
+                    className={`bg-slate-700/30 border rounded-lg p-4 hover:bg-slate-600/30 transition-colors cursor-pointer ${
+                      isOverdue 
+                        ? 'bg-red-500/10 border-red-500 border-l-4'
+                        : isUrgent 
+                        ? 'bg-orange-500/10 border-orange-500 border-l-4'
+                        : isApproaching
+                        ? 'bg-yellow-500/5 border-yellow-500/50 border-l-4'
+                        : 'border-slate-600'
+                    }`}
                     onClick={() => {
                       onClose(); // Close modal first
                       router.push(`/syor/${syor.id}`); // Use Next.js router
@@ -56,7 +77,24 @@ function SyorModal({ isOpen, onClose, title, syorList, status }: SyorModalProps)
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-white mb-2">{syor.title}</h3>
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-semibold text-white">{syor.title}</h3>
+                          {isOverdue && (
+                            <span className="text-xs px-2 py-1 bg-red-500/30 text-red-200 border-2 border-red-500 rounded-full font-bold animate-pulse shadow-lg shadow-red-500/50">
+                              🔴 TERTUNGGAK ({Math.abs(daysUntilDeadline!)} hari lepas)
+                            </span>
+                          )}
+                          {isUrgent && (
+                            <span className="text-xs px-2 py-1 bg-orange-500/30 text-orange-200 border-2 border-orange-500 rounded-full font-bold animate-pulse shadow-lg shadow-orange-500/50">
+                              ⚠️ SEGERA ({daysUntilDeadline} hari lagi)
+                            </span>
+                          )}
+                          {isApproaching && (
+                            <span className="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-200 border border-yellow-500/30 rounded-full font-medium">
+                              ⏰ {daysUntilDeadline} hari lagi
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-slate-300 mb-2">
                           Penyelaras: {syor.department?.name || syor.jpn?.name || 'Tidak ditetapkan'}
                         </p>
@@ -68,8 +106,18 @@ function SyorModal({ isOpen, onClose, title, syorList, status }: SyorModalProps)
                             )}
                           </p>
                         )}
+                        {responseDeadline && (
+                          <p className={`text-xs mb-1 ${
+                            isOverdue ? 'text-red-400 font-bold' :
+                            isUrgent ? 'text-orange-400 font-bold' :
+                            isApproaching ? 'text-yellow-400 font-semibold' :
+                            'text-slate-400'
+                          }`}>
+                            🕐 Tarikh Akhir Maklum Balas: {responseDeadline.toLocaleDateString('ms-MY')}
+                          </p>
+                        )}
                         <p className="text-xs text-slate-400">
-                          Tarikh Akhir: {new Date(syor.due_date).toLocaleDateString('ms-MY')}
+                          Jangkaan Tarikh Akhir Tindakan: {new Date(syor.due_date).toLocaleDateString('ms-MY')}
                         </p>
                         {latestStatus?.comments && (
                           <p className="text-xs text-slate-400 mt-2">
@@ -533,14 +581,52 @@ export default function Dashboard() {
                     const latestStatus = sortedStatusTracking?.[0]
                     const statusType = latestStatus?.status || 'belum_selesai'
                     
+                    // Calculate deadline urgency (same logic as syor page)
+                    const today = new Date()
+                    const responseDeadline = syor.response_deadline ? new Date(syor.response_deadline) : null
+                    
+                    const daysUntilDeadline = responseDeadline 
+                      ? Math.ceil((responseDeadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                      : null
+                    
+                    const isCompleted = statusType === 'selesai'
+                    const isOverdue = daysUntilDeadline !== null && daysUntilDeadline < 0 && !isCompleted
+                    const isUrgent = daysUntilDeadline !== null && daysUntilDeadline <= 3 && daysUntilDeadline >= 0 && !isCompleted
+                    const isApproaching = daysUntilDeadline !== null && daysUntilDeadline <= 7 && daysUntilDeadline > 3 && !isCompleted
+                    
                     return (
                       <div 
                         key={syor.id} 
-                        className="flex items-center justify-between p-4 bg-slate-700/30 border border-slate-600 rounded-xl hover:bg-slate-600/30 transition-colors cursor-pointer"
+                        className={`flex items-center justify-between p-4 border rounded-xl hover:bg-slate-600/30 transition-colors cursor-pointer ${
+                          isOverdue 
+                            ? 'bg-red-500/10 border-red-500 border-l-4'
+                            : isUrgent 
+                            ? 'bg-orange-500/10 border-orange-500 border-l-4'
+                            : isApproaching
+                            ? 'bg-yellow-500/5 border-yellow-500/50 border-l-4'
+                            : 'bg-slate-700/30 border-slate-600'
+                        }`}
                         onClick={() => handleSyorClick(syor.id)}
                       >
                         <div className="flex-1">
-                          <h4 className="font-semibold text-white mb-2">{syor.title}</h4>
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-semibold text-white">{syor.title}</h4>
+                            {isOverdue && (
+                              <span className="text-xs px-2 py-1 bg-red-500/30 text-red-200 border-2 border-red-500 rounded-full font-bold animate-pulse shadow-lg shadow-red-500/50">
+                                🔴 TERTUNGGAK ({Math.abs(daysUntilDeadline!)} hari lepas)
+                              </span>
+                            )}
+                            {isUrgent && (
+                              <span className="text-xs px-2 py-1 bg-orange-500/30 text-orange-200 border-2 border-orange-500 rounded-full font-bold animate-pulse shadow-lg shadow-orange-500/50">
+                                ⚠️ SEGERA ({daysUntilDeadline} hari lagi)
+                              </span>
+                            )}
+                            {isApproaching && (
+                              <span className="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-200 border border-yellow-500/30 rounded-full font-medium">
+                                ⏰ {daysUntilDeadline} hari lagi
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm text-slate-300 mb-1">
                             Ditugaskan kepada: {syor.department?.name || syor.jpn?.name || 'Tidak ditetapkan'}
                           </p>
@@ -552,8 +638,18 @@ export default function Dashboard() {
                               )}
                             </p>
                           )}
+                          {responseDeadline && (
+                            <p className={`text-xs mb-1 ${
+                              isOverdue ? 'text-red-400 font-bold' :
+                              isUrgent ? 'text-orange-400 font-bold' :
+                              isApproaching ? 'text-yellow-400 font-semibold' :
+                              'text-slate-400'
+                            }`}>
+                              🕐 Tarikh Akhir Maklum Balas: {responseDeadline.toLocaleDateString('ms-MY')}
+                            </p>
+                          )}
                           <p className="text-xs text-slate-400">
-                            Tarikh Akhir: {new Date(syor.due_date).toLocaleDateString('ms-MY')}
+                            Jangkaan Tarikh Akhir Tindakan: {new Date(syor.due_date).toLocaleDateString('ms-MY')}
                           </p>
                           <p className="text-xs text-blue-400 mt-1">
                             👆 Klik untuk lihat butiran lengkap

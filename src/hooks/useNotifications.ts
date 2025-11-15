@@ -7,14 +7,14 @@ import { useAuth } from './useAuthSimple'
 export interface Notification {
   id: string
   user_id: string
-  syor_id: string
-  notification_type: 'new_comment' | 'status_change' | 'new_response' | 'new_syor'
+  syor_id: string | null
+  notification_type: 'deadline' | 'status_update' | 'new_syor' | 'system' | 'overdue'
   title: string
   message: string
-  is_read: boolean
+  read: boolean
   created_at: string
   created_by: string | null
-  metadata: Record<string, unknown>
+  metadata: Record<string, unknown> | null
 }
 
 export function useNotifications() {
@@ -43,7 +43,7 @@ export function useNotifications() {
     try {
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select('id, user_id, syor_id, type, title, message, read, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50)
@@ -53,11 +53,19 @@ export function useNotifications() {
         throw error
       }
 
-      console.log('useNotifications: Fetched notifications:', data)
-      console.log('useNotifications: Unread count:', data?.filter(n => !n.is_read).length || 0)
+      // Map database fields to interface
+      const mappedData = data?.map(n => ({
+        ...n,
+        notification_type: n.type,
+        created_by: null,
+        metadata: null
+      })) || []
 
-      setNotifications(data || [])
-      setUnreadCount(data?.filter(n => !n.is_read).length || 0)
+      console.log('useNotifications: Fetched notifications:', mappedData)
+      console.log('useNotifications: Unread count:', mappedData.filter(n => !n.read).length)
+
+      setNotifications(mappedData)
+      setUnreadCount(mappedData.filter(n => !n.read).length)
     } catch (error) {
       console.error('Error fetching notifications:', error)
     } finally {
@@ -71,14 +79,14 @@ export function useNotifications() {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ read: true })
         .eq('id', notificationId)
 
       if (error) throw error
 
       // Update local state
       setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       )
       setUnreadCount(prev => Math.max(0, prev - 1))
     } catch (error) {
@@ -93,15 +101,15 @@ export function useNotifications() {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ read: true })
         .eq('user_id', user.id)
-        .eq('is_read', false)
+        .eq('read', false)
 
       if (error) throw error
 
       // Update local state
       setNotifications(prev =>
-        prev.map(n => ({ ...n, is_read: true }))
+        prev.map(n => ({ ...n, read: true }))
       )
       setUnreadCount(0)
     } catch (error) {
@@ -123,7 +131,7 @@ export function useNotifications() {
       setNotifications(prev => prev.filter(n => n.id !== notificationId))
       setUnreadCount(prev => {
         const notification = notifications.find(n => n.id === notificationId)
-        return notification && !notification.is_read ? Math.max(0, prev - 1) : prev
+        return notification && !notification.read ? Math.max(0, prev - 1) : prev
       })
     } catch (error) {
       console.error('Error deleting notification:', error)
@@ -148,7 +156,13 @@ export function useNotifications() {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          const newNotification = payload.new as Notification
+          const dbNotification = payload.new as Record<string, unknown>
+          const newNotification: Notification = {
+            ...dbNotification,
+            notification_type: dbNotification.type as Notification['notification_type'],
+            created_by: null,
+            metadata: null
+          } as Notification
           setNotifications(prev => [newNotification, ...prev])
           setUnreadCount(prev => prev + 1)
           
@@ -171,11 +185,17 @@ export function useNotifications() {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          const updatedNotification = payload.new as Notification
+          const dbNotification = payload.new as Record<string, unknown>
+          const updatedNotification: Notification = {
+            ...dbNotification,
+            notification_type: dbNotification.type as Notification['notification_type'],
+            created_by: null,
+            metadata: null
+          } as Notification
           setNotifications(prev =>
             prev.map(n => n.id === updatedNotification.id ? updatedNotification : n)
           )
-          if (updatedNotification.is_read) {
+          if (updatedNotification.read) {
             setUnreadCount(prev => Math.max(0, prev - 1))
           }
         }
@@ -191,7 +211,7 @@ export function useNotifications() {
         (payload) => {
           const deletedNotification = payload.old as Notification
           setNotifications(prev => prev.filter(n => n.id !== deletedNotification.id))
-          if (!deletedNotification.is_read) {
+          if (!deletedNotification.read) {
             setUnreadCount(prev => Math.max(0, prev - 1))
           }
         }

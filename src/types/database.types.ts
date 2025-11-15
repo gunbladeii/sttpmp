@@ -276,7 +276,7 @@ export type Database = {
           user_id: string
           title: string
           message: string
-          type: 'deadline' | 'status_update' | 'new_syor' | 'system'
+          type: 'deadline' | 'status_update' | 'new_syor' | 'system' | 'overdue'
           read: boolean
           syor_id: string | null
           created_at: string
@@ -286,7 +286,7 @@ export type Database = {
           user_id: string
           title: string
           message: string
-          type: 'deadline' | 'status_update' | 'new_syor' | 'system'
+          type: 'deadline' | 'status_update' | 'new_syor' | 'system' | 'overdue'
           read?: boolean
           syor_id?: string | null
           created_at?: string
@@ -296,7 +296,7 @@ export type Database = {
           user_id?: string
           title?: string
           message?: string
-          type?: 'deadline' | 'status_update' | 'new_syor' | 'system'
+          type?: 'deadline' | 'status_update' | 'new_syor' | 'system' | 'overdue'
           read?: boolean
           syor_id?: string | null
           created_at?: string

@@ -14,7 +14,7 @@ export default function SyorList() {
   const [userDetails, setUserDetails] = useState<Record<string, unknown> | null>(null) // Store user with department/JPN details
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'all' | 'belum_selesai' | 'dalam_tindakan' | 'selesai'>('all')
+  const [filter, setFilter] = useState<'all' | 'belum_selesai' | 'dalam_tindakan' | 'selesai' | 'hampir_tamat'>('all')
 
   // Check authentication only after auth loading is complete
   useEffect(() => {
@@ -115,6 +115,19 @@ export default function SyorList() {
 
   const filteredSyor = filter === 'all' 
     ? syor 
+    : filter === 'hampir_tamat'
+    ? syor.filter(item => {
+        const today = new Date()
+        const responseDeadline = new Date(item.response_deadline || item.due_date)
+        const daysUntilDeadline = Math.ceil((responseDeadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+        
+        // Show syor that are due within 7 days and not yet completed
+        const sortedStatusTracking = item.status_tracking
+          ?.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+        const latestStatus = sortedStatusTracking?.[0]?.status || 'belum_selesai'
+        
+        return daysUntilDeadline <= 7 && daysUntilDeadline >= 0 && latestStatus !== 'selesai'
+      })
     : syor.filter(item => {
         // Sort status_tracking to get the latest status
         const sortedStatusTracking = item.status_tracking
@@ -264,6 +277,16 @@ export default function SyorList() {
             >
               Selesai
             </button>
+            <button
+              onClick={() => setFilter('hampir_tamat')}
+              className={`px-6 py-3 rounded-xl text-sm font-medium transition-all transform hover:scale-105 ${
+                filter === 'hampir_tamat' 
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border border-orange-500/30 animate-pulse' 
+                  : 'cloudpeak-card text-slate-300 hover:text-white border border-slate-600 hover:border-orange-500/50'
+              }`}
+            >
+              ⏰ Hampir Tamat Tempoh
+            </button>
           </div>
         </div>
 
@@ -277,17 +300,43 @@ export default function SyorList() {
                   ?.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
                 const latestStatus = sortedStatusTracking?.[0]
                 const statusType = latestStatus?.status || 'belum_selesai'
-                const isOverdue = new Date(item.due_date) < new Date() && statusType !== 'selesai'
+                
+                // Calculate deadline status
+                const today = new Date()
+                const responseDeadline = new Date(item.response_deadline || item.due_date)
+                const daysUntilDeadline = Math.ceil((responseDeadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                
+                const isOverdue = daysUntilDeadline < 0 && statusType !== 'selesai'
+                const isUrgent = daysUntilDeadline <= 3 && daysUntilDeadline >= 0 && statusType !== 'selesai'
+                const isApproaching = daysUntilDeadline <= 7 && daysUntilDeadline > 3 && statusType !== 'selesai'
                 
                 return (
-                  <div key={item.id} className="p-8 hover:bg-slate-600/20 transition-all">
+                  <div 
+                    key={item.id} 
+                    className={`p-8 transition-all ${
+                      isOverdue ? 'bg-red-500/10 border-l-4 border-red-500 hover:bg-red-500/20' :
+                      isUrgent ? 'bg-orange-500/10 border-l-4 border-orange-500 hover:bg-orange-500/20' :
+                      isApproaching ? 'bg-yellow-500/5 border-l-4 border-yellow-500/50 hover:bg-yellow-500/10' :
+                      'hover:bg-slate-600/20'
+                    }`}
+                  >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-4">
                           <h3 className="text-xl font-bold text-white">{item.title}</h3>
                           {isOverdue && (
-                            <span className="px-3 py-1 bg-red-500/20 text-red-300 text-xs font-medium rounded-full border border-red-500/30">
-                              Overdue
+                            <span className="px-3 py-1.5 bg-red-500/30 text-red-200 text-xs font-bold rounded-full border-2 border-red-500 animate-pulse shadow-lg shadow-red-500/50">
+                              🔴 TERTUNGGAK ({Math.abs(daysUntilDeadline)} hari lepas)
+                            </span>
+                          )}
+                          {isUrgent && !isOverdue && (
+                            <span className="px-3 py-1.5 bg-orange-500/30 text-orange-200 text-xs font-bold rounded-full border-2 border-orange-500 animate-pulse shadow-lg shadow-orange-500/50">
+                              ⚠️ SEGERA ({daysUntilDeadline} hari lagi)
+                            </span>
+                          )}
+                          {isApproaching && !isUrgent && !isOverdue && (
+                            <span className="px-3 py-1 bg-yellow-500/20 text-yellow-300 text-xs font-medium rounded-full border border-yellow-500/30">
+                              ⏰ {daysUntilDeadline} hari lagi
                             </span>
                           )}
                         </div>
@@ -304,11 +353,26 @@ export default function SyorList() {
                         )}
                         
                         <div className="flex flex-wrap gap-6 text-sm">
+                          {item.response_deadline && (
+                            <div className={`flex items-center gap-2 ${
+                              isOverdue ? 'text-red-400 font-bold' :
+                              isUrgent ? 'text-orange-400 font-bold' :
+                              isApproaching ? 'text-yellow-400' :
+                              'text-slate-400'
+                            }`}>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span className="text-white font-medium">Tarikh Maklum Balas:</span> 
+                              <span className={isOverdue || isUrgent ? 'font-bold' : ''}>{formatDate(item.response_deadline)}</span>
+                            </div>
+                          )}
+                          
                           <div className="flex items-center gap-2 text-slate-400">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <span className="text-white font-medium">Due:</span> {formatDate(item.due_date)}
+                            <span className="text-white font-medium">Tarikh Akhir:</span> {formatDate(item.due_date)}
                           </div>
                           
                           <div className="flex items-center gap-2 text-slate-400">
