@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, name, password, confirmPassword, department_id, jpn_id } = await request.json()
+    const { email, name, password, confirmPassword, department_id, jpn_id, requestedRole } = await request.json()
 
     // Validation
     if (!email || !name || !password || !confirmPassword) {
@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
         password_plain: password,
         department_id: department_id && department_id.trim() !== '' ? department_id : null,
         jpn_id: jpn_id && jpn_id.trim() !== '' ? jpn_id : null,
+        requested_role: requestedRole || null, // Save requested role for admin reference
         email_verified: false,
         is_active: false,
         is_approved: false

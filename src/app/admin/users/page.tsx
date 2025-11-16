@@ -16,6 +16,7 @@ interface User {
   jpn_id: string | null
   is_active: boolean
   is_approved: boolean
+  requested_role: string | null
   created_at: string
   department?: {
     id: string
@@ -399,9 +400,16 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`cloudpeak-badge inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
-                          {getRoleLabel(user.role)}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className={`cloudpeak-badge inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
+                            {getRoleLabel(user.role)}
+                          </span>
+                          {!user.is_approved && user.requested_role && (
+                            <span className="text-xs text-orange-400 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/30">
+                              📋 Mohon: {getRoleLabel(user.requested_role)}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-slate-300">

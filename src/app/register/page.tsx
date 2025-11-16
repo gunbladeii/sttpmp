@@ -19,6 +19,8 @@ export default function RegisterPage() {
     department_id: undefined,
     jpn_id: undefined
   })
+  
+  const [requestedRole, setRequestedRole] = useState<string>('')
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -42,7 +44,13 @@ export default function RegisterPage() {
     
     setIsSubmitting(true)
     
-    const result = await register(formData)
+    // Include requestedRole in registration data
+    const registrationData = {
+      ...formData,
+      requestedRole
+    }
+    
+    const result = await register(registrationData)
     
     if (result.success) {
       setSuccess(true)
@@ -99,6 +107,18 @@ export default function RegisterPage() {
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nama Penuh:</label>
                 <p className="text-gray-900 dark:text-white">{formData.name}</p>
               </div>
+
+              {requestedRole && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Peranan Dipohon:</label>
+                  <p className="text-gray-900 dark:text-white">
+                    {requestedRole === 'penyelaras_bahagian' && 'Penyelaras Bahagian'}
+                    {requestedRole === 'penyelaras_jpn' && 'Penyelaras JPN'}
+                    {requestedRole === 'penyelaras_jnn' && 'Penyelaras JNN'}
+                    {requestedRole === 'peneraju_pemeriksaan' && 'Peneraju Sektor (JNIP)'}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
@@ -188,6 +208,30 @@ export default function RegisterPage() {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 placeholder="Nama penuh anda"
               />
+            </div>
+
+            {/* Requested Role Field */}
+            <div>
+              <label htmlFor="requestedRole" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Peranan Dipohon <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="requestedRole"
+                name="requestedRole"
+                required
+                value={requestedRole}
+                onChange={(e) => setRequestedRole(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-slate-700 text-white"
+              >
+                <option value="" className="bg-slate-700 text-slate-400">-- Pilih Peranan --</option>
+                <option value="penyelaras_bahagian" className="bg-slate-700 text-white">Penyelaras Bahagian</option>
+                <option value="penyelaras_jpn" className="bg-slate-700 text-white">Penyelaras JPN</option>
+                <option value="penyelaras_jnn" className="bg-slate-700 text-white">Penyelaras JNN</option>
+                <option value="peneraju_pemeriksaan" className="bg-slate-700 text-white">Peneraju Sektor (JNIP)</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Pilih peranan yang sesuai untuk rujukan admin
+              </p>
             </div>
 
             {/* Password Field */}
