@@ -190,10 +190,16 @@ export default function DashboardLaporan() {
           new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
         )
         const latestStatus = sortedStatus?.[0]?.status || 'belum_selesai'
-        return latestStatus !== 'selesai' && new Date(syor.due_date) < now
+        
+        // Check if not completed AND response_deadline has passed
+        // Use response_deadline (Tarikh Akhir Maklum Balas) instead of due_date
+        const responseDeadline = syor.response_deadline ? new Date(syor.response_deadline) : new Date(syor.due_date)
+        return latestStatus !== 'selesai' && responseDeadline < now
       })
       .map(syor => {
-        const daysOverdue = Math.floor((now.getTime() - new Date(syor.due_date).getTime()) / (1000 * 60 * 60 * 24))
+        // Calculate days overdue based on response_deadline
+        const responseDeadline = syor.response_deadline ? new Date(syor.response_deadline) : new Date(syor.due_date)
+        const daysOverdue = Math.floor((now.getTime() - responseDeadline.getTime()) / (1000 * 60 * 60 * 24))
         return {
           id: syor.id,
           title: syor.title,
@@ -400,7 +406,11 @@ export default function DashboardLaporan() {
           {topDelayedSyor.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {topDelayedSyor.map((syor, index) => (
-                <div key={syor.id} className="bg-slate-800/30 border border-slate-700/30 rounded-lg p-6">
+                <div 
+                  key={syor.id} 
+                  onClick={() => router.push(`/syor/${syor.id}`)}
+                  className="bg-slate-800/30 border border-slate-700/30 rounded-lg p-6 cursor-pointer hover:bg-slate-700/40 hover:border-red-500/50 transition-all duration-200 hover:shadow-lg hover:shadow-red-500/20"
+                >
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-2xl font-bold text-red-400">#{index + 1}</span>
                     <span className={`px-3 py-1 text-xs font-medium rounded-full ${
@@ -423,6 +433,9 @@ export default function DashboardLaporan() {
                     <p className="text-3xl font-bold text-red-400">{syor.daysOverdue}</p>
                     <p className="text-xs text-slate-400">hari tertunda</p>
                   </div>
+                  <p className="text-xs text-blue-400 mt-4 text-center">
+                    👆 Klik untuk lihat butiran lengkap
+                  </p>
                 </div>
               ))}
             </div>
