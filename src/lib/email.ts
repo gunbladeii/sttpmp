@@ -3,6 +3,36 @@ import * as brevo from '@getbrevo/brevo'
 const apiInstance = new brevo.TransactionalEmailsApi()
 apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY || '')
 
+interface SendEmailParams {
+  to: string
+  subject: string
+  html: string
+  name?: string
+}
+
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  name = 'User'
+}: SendEmailParams) {
+  try {
+    const sendSmtpEmail = new brevo.SendSmtpEmail()
+    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STTPMP - Jemaah Nazir' }
+    sendSmtpEmail.to = [{ email: to, name }]
+    sendSmtpEmail.subject = subject
+    sendSmtpEmail.htmlContent = html
+
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
+
+    console.log('✅ Email sent successfully to:', to)
+    return { success: true, data }
+  } catch (error) {
+    console.error('❌ Error sending email:', error)
+    return { success: false, error }
+  }
+}
+
 interface SendApprovalEmailParams {
   to: string
   userName: string

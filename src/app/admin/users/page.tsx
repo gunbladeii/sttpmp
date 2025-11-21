@@ -100,6 +100,12 @@ export default function AdminUsersPage() {
   })
   const [isUpdating, setIsUpdating] = useState(false)
   
+  // Reset Password states
+  const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null)
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  
   // Pagination and search states
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -250,6 +256,58 @@ export default function AdminUsersPage() {
   const handleCancelEdit = () => {
     setEditingUser(null)
     setFormData({ role: '', sector: '', department_id: '', jpn_id: '' })
+  }
+
+  const handleResetPassword = async (userToReset: User) => {
+    const confirmed = confirm(
+      `Adakah anda pasti ingin menetapkan semula kata laluan untuk ${userToReset.name}?\n\n` +
+      `Kata laluan sementara baharu akan dijana dan dihantar ke ${userToReset.email}`
+    )
+
+    if (!confirmed) return
+
+    try {
+      setIsResettingPassword(true)
+      setResetPasswordUser(userToReset)
+
+      const response = await fetch('/api/admin/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId: userToReset.id })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Gagal menetapkan semula kata laluan')
+      }
+
+      // Show temporary password in modal
+      setTemporaryPassword(result.temporaryPassword)
+      setShowPasswordModal(true)
+
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Ralat menetapkan semula kata laluan: ${errorMessage}`)
+      setResetPasswordUser(null)
+    } finally {
+      setIsResettingPassword(false)
+    }
+  }
+
+  const handleClosePasswordModal = () => {
+    setShowPasswordModal(false)
+    setTemporaryPassword(null)
+    setResetPasswordUser(null)
+  }
+
+  const copyPasswordToClipboard = () => {
+    if (temporaryPassword) {
+      navigator.clipboard.writeText(temporaryPassword)
+      alert('Kata laluan telah disalin ke clipboard!')
+    }
   }
 
   // Filter and pagination logic
@@ -452,6 +510,18 @@ export default function AdminUsersPage() {
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          
+                          {/* Reset Password Icon */}
+                          <button
+                            onClick={() => handleResetPassword(user)}
+                            title="Reset Password"
+                            disabled={isResettingPassword}
+                            className="p-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg transition-all transform hover:scale-110 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                             </svg>
                           </button>
                           
@@ -661,6 +731,118 @@ export default function AdminUsersPage() {
                 >
                   {isUpdating ? 'Mengemas kini...' : 'Kemas kini'}
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Password Reset Modal */}
+        {showPasswordModal && resetPasswordUser && temporaryPassword && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-700">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-yellow-600 to-orange-600 px-8 py-6 rounded-t-2xl">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Kata Laluan Baharu</h3>
+                    <p className="text-yellow-100 text-sm mt-1">Password telah berjaya ditetapkan semula</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-8">
+                {/* User Info */}
+                <div className="bg-slate-700/30 border border-slate-600 rounded-lg p-4 mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-blue-500/20 p-2 rounded-lg">
+                      <svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 4a4 4 0 014 4 4 4 0 01-4 4 4 4 0 01-4-4 4 4 0 014-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold">{resetPasswordUser.name}</p>
+                      <p className="text-slate-400 text-sm">{resetPasswordUser.email}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Temporary Password Display */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-slate-300 mb-3">
+                    Kata Laluan Sementara
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={temporaryPassword}
+                      readOnly
+                      className="w-full px-4 py-4 bg-slate-900 border-2 border-yellow-500/50 rounded-lg text-yellow-400 font-mono text-lg tracking-wider focus:outline-none focus:border-yellow-500 pr-12"
+                    />
+                    <button
+                      onClick={copyPasswordToClipboard}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg transition-all"
+                      title="Salin ke Clipboard"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-400 flex items-center space-x-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Klik butang untuk salin password</span>
+                  </p>
+                </div>
+
+                {/* Important Notice */}
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
+                  <div className="flex space-x-3">
+                    <div className="flex-shrink-0">
+                      <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-red-400 font-semibold mb-2">Penting!</h4>
+                      <ul className="text-sm text-red-300 space-y-1">
+                        <li>• Kata laluan ini hanya dipaparkan SEKALI sahaja</li>
+                        <li>• Emel telah dihantar ke pengguna dengan kata laluan yang sama</li>
+                        <li>• Pengguna MESTI menukar password selepas log masuk pertama</li>
+                        <li>• Simpan password ini dengan selamat jika pengguna memerlukannya</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Email Confirmation */}
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
+                  <div className="flex items-center space-x-3">
+                    <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-green-300 text-sm">
+                      ✅ Emel pengesahan telah dihantar ke <span className="font-semibold">{resetPasswordUser.email}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Close Button */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleClosePasswordModal}
+                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-lg transition-all transform hover:scale-105 shadow-lg font-semibold"
+                  >
+                    Tutup
+                  </button>
+                </div>
               </div>
             </div>
           </div>
