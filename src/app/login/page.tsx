@@ -245,8 +245,18 @@ export default function LoginPage() {
               </button>
             </div>
 
+            {/* Forgot Password Link */}
+            <div className="text-center mt-2">
+              <Link 
+                href="/forgot-password" 
+                className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+              >
+                Lupa Kata Laluan?
+              </Link>
+            </div>
+
             {/* Links */}
-            <div className="text-center space-y-3">
+            <div className="text-center space-y-3 mt-4">
               <Link 
                 href="/register" 
                 className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
