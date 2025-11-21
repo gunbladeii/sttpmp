@@ -107,10 +107,30 @@ export default function DashboardHeader() {
             {/* Notification Bell */}
             <NotificationBell />
             
-            {/* User Info */}
-            <div className="text-sm">
-              <span className="font-semibold text-white">{user.name}</span>
-              <span className={`ml-3 px-3 py-1 rounded-full text-xs font-medium cloudpeak-badge ${
+            {/* User Info - Responsive, Truncated */}
+            {/* Google-style user avatar + badge */}
+            <div className="flex items-center gap-2">
+              {/* User Initials Avatar */}
+              <span
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full border-2 font-bold text-base text-white"
+                style={{
+                  background: user.role === 'admin' ? '#ef4444' :
+                    user.role === 'peneraju_pemeriksaan' ? '#3b82f6' :
+                    user.role === 'penyelaras_jpn' ? '#22c55e' :
+                    user.role === 'penyelaras_jnn' ? '#14b8a6' :
+                    '#64748b',
+                  borderColor: user.role === 'admin' ? '#b91c1c' :
+                    user.role === 'peneraju_pemeriksaan' ? '#1d4ed8' :
+                    user.role === 'penyelaras_jpn' ? '#166534' :
+                    user.role === 'penyelaras_jnn' ? '#0f766e' :
+                    '#334155',
+                }}
+                title={user.name}
+              >
+                {user.name.split(' ').slice(0,2).map(word => word[0]).join('').toUpperCase()}
+              </span>
+              {/* User Role Badge */}
+              <span className={`px-2 py-1 rounded-full text-xs font-medium cloudpeak-badge ${
                 user.role === 'admin' 
                   ? 'bg-red-500/20 text-red-300 border-red-500/30' 
                   : user.role === 'peneraju_pemeriksaan'

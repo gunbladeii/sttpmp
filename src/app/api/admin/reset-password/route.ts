@@ -31,6 +31,8 @@ export async function POST(request: NextRequest) {
   try {
     const { userId } = await request.json()
 
+    console.log('🔍 Reset Password Request - User ID:', userId)
+
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID is required' },
@@ -38,16 +40,49 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user details
+    // Get user details from our users table
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
-      .select('email, name')
+      .select('email, name, id')
       .eq('id', userId)
       .single()
 
+    console.log('📋 User data from database:', userData)
+    console.log('❌ User error:', userError)
+
     if (userError || !userData) {
+      console.error('Error finding user in users table:', userError)
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: `User not found in database: ${userError?.message || 'Unknown error'}` },
+        { status: 404 }
+      )
+    }
+
+    console.log('✅ Found user in database:', userData.email)
+
+    // Get auth user by email to get the auth user ID
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.listUsers()
+    
+    if (authError) {
+      console.error('Error listing auth users:', authError)
+      return NextResponse.json(
+        { error: 'Failed to access auth system' },
+        { status: 500 }
+      )
+    }
+
+    console.log('📊 Total auth users found:', authUser.users.length)
+
+    // Find the auth user with matching email
+    const matchedAuthUser = authUser.users.find(u => u.email === userData.email)
+
+    console.log('🔍 Looking for auth user with email:', userData.email)
+    console.log('✅ Matched auth user:', matchedAuthUser?.id)
+
+    if (!matchedAuthUser) {
+      console.error('Auth user not found for email:', userData.email)
+      return NextResponse.json(
+        { error: `User not found in authentication system for email: ${userData.email}` },
         { status: 404 }
       )
     }
@@ -55,16 +90,21 @@ export async function POST(request: NextRequest) {
     // Generate temporary password
     const temporaryPassword = generateTemporaryPassword()
 
-    // Update user password in Supabase Auth
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-      userId,
+    console.log('🔑 Generated password, updating auth user:', matchedAuthUser.id)
+
+    // Update user password in Supabase Auth using the auth user ID
+    console.log('🔄 Attempting Supabase Auth password update for:', matchedAuthUser.id)
+    const updateResult = await supabaseAdmin.auth.admin.updateUserById(
+      matchedAuthUser.id,
       { password: temporaryPassword }
     )
-
-    if (updateError) {
-      console.error('Error updating password:', updateError)
+    console.log('📝 Supabase Auth update response:', updateResult)
+    if (updateResult.error) {
+      console.error('❌ Error updating password:', updateResult.error)
+      // Log full error object for debugging
+      console.error('❌ Full error details:', JSON.stringify(updateResult.error, null, 2))
       return NextResponse.json(
-        { error: 'Failed to reset password' },
+        { error: 'Failed to reset password', details: updateResult.error },
         { status: 500 }
       )
     }
