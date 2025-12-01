@@ -218,23 +218,9 @@ export default function Dashboard() {
         setLoading(true)
         setError(null)
 
-        // First, fetch user details with department/JPN information
-        if (user?.id) {
-          const { data: userWithDetails, error: userError } = await supabase
-            .from('users')
-            .select(`
-              *,
-              department:department_id(id, name, code, sector),
-              jpn:jpn_id(id, name, state)
-            `)
-            .eq('id', user.id)
-            .single()
-
-          if (userError) {
-            console.error('Error fetching user details:', userError)
-          } else {
-            setUserDetails(userWithDetails)
-          }
+        // Use user from context (already has department/JPN details from login)
+        if (user) {
+          setUserDetails(user as any)
         }
 
         // Build query based on user's role for syor

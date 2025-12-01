@@ -352,7 +352,6 @@ export default function AdminUsersPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
-      <DashboardHeader />
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="mb-8">
           <h1 className="cloudpeak-title">Pengurusan Pengguna</h1>

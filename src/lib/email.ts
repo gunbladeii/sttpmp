@@ -1,12 +1,23 @@
 import * as brevo from '@getbrevo/brevo'
 
+// Handle SSL certificate issues in development/corporate networks
+if (process.env.NODE_ENV === 'development') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+}
+
 const apiInstance = new brevo.TransactionalEmailsApi()
 apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY || '')
 
+interface EmailRecipient {
+  email: string
+  name?: string
+}
+
 interface SendEmailParams {
-  to: string
+  to: EmailRecipient[] | string
   subject: string
-  html: string
+  html?: string
+  htmlContent?: string
   name?: string
 }
 
@@ -14,22 +25,37 @@ export async function sendEmail({
   to,
   subject,
   html,
+  htmlContent,
   name = 'User'
 }: SendEmailParams) {
   try {
     const sendSmtpEmail = new brevo.SendSmtpEmail()
-    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STTPMP - Jemaah Nazir' }
-    sendSmtpEmail.to = [{ email: to, name }]
+    
+    // Use BREVO_SENDER_EMAIL from env
+    const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com'
+    const senderName = process.env.BREVO_SENDER_NAME || 'STTPMP - Jemaah Nazir'
+    
+    sendSmtpEmail.sender = { email: senderEmail, name: senderName }
+    
+    // Handle both array and string formats for 'to'
+    if (Array.isArray(to)) {
+      sendSmtpEmail.to = to
+    } else {
+      sendSmtpEmail.to = [{ email: to, name }]
+    }
+    
     sendSmtpEmail.subject = subject
-    sendSmtpEmail.htmlContent = html
+    
+    // Handle both html and htmlContent
+    sendSmtpEmail.htmlContent = htmlContent || html || ''
 
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
 
-    console.log('✅ Email sent successfully to:', to)
+    console.log('✅ Email sent successfully to:', Array.isArray(to) ? to.map(t => t.email).join(', ') : to)
     return { success: true, data }
   } catch (error) {
     console.error('❌ Error sending email:', error)
-    return { success: false, error }
+    throw error // Throw error so caller can handle
   }
 }
 

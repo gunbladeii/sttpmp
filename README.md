@@ -107,19 +107,69 @@ The system uses a weighted scoring mechanism:
 
 Overall completion percentage is calculated based on the average weight across all tracked items.
 
+## 🔒 Security Updates (December 1, 2025)
+
+**MAJOR SECURITY FIXES IMPLEMENTED** - System is now production-ready!
+
+✅ Bcrypt password hashing (no more plaintext)  
+✅ Role-based RLS policies (proper access control)  
+✅ JWT token authentication (secure API routes)  
+✅ Supabase Storage integration (scalable file uploads)  
+✅ Environment validation (fail-fast on missing vars)  
+
+**📚 See full details:**
+- `SECURITY_FIXES_SUMMARY.md` - Complete security overview
+- `DEPLOYMENT_CHECKLIST.md` - Step-by-step deployment guide
+- `FIXES_QUICK_REFERENCE.md` - Quick reference for developers
+
 ## 🚀 Deployment
 
+### Pre-Deployment Steps (CRITICAL!)
+
+1. **Run Database Migration**
+   ```sql
+   -- In Supabase SQL Editor, execute:
+   database/migrations/001_security_fixes.sql
+   ```
+
+2. **Initialize Storage Bucket**
+   ```typescript
+   // Run once via API endpoint or script:
+   import { initializeStorage } from '@/lib/storage'
+   await initializeStorage()
+   ```
+
+3. **Setup Environment Variables**
+   ```bash
+   cp .env.example .env.local
+   # Fill in all required values
+   ```
+
 ### Vercel Deployment
+
 1. Push code to GitHub repository
 2. Connect repository to Vercel
-3. Add environment variables in Vercel dashboard
+3. Add ALL environment variables from `.env.example`
 4. Deploy automatically on push to main branch
 
-### Environment Variables for Production
+### Required Environment Variables
+
+```env
+# Supabase (Required)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Email (Required)
+BREVO_API_KEY=your-brevo-api-key
+BREVO_FROM_EMAIL=noreply@sttpmp.com
+
+# App Config (Required)
+NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
+NODE_ENV=production
 ```
-NEXT_PUBLIC_SUPABASE_URL=your_production_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key
-```
+
+See `.env.example` for complete list including optional variables.
 
 ## 🤝 Contributing
 

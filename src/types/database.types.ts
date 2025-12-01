@@ -318,6 +318,47 @@ export type Database = {
           }
         ]
       }
+      announcements: {
+        Row: {
+          id: string;
+          title: string;
+          content: string | null;
+          image_url: string | null;
+          published: boolean;
+          author_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          content?: string | null;
+          image_url?: string | null;
+          published?: boolean;
+          author_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          content?: string | null;
+          image_url?: string | null;
+          published?: boolean;
+          author_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "announcements_author_id_fkey",
+            columns: ["author_id"],
+            isOneToOne: false,
+            referencedRelation: "users",
+            referencedColumns: ["id"]
+          }
+        ];
+      },
       audit_logs: {
         Row: {
           id: string

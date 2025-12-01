@@ -1,3 +1,14 @@
+/* Force TipTap editor font color and background to be readable regardless of global body color */
+.ProseMirror {
+  color: #22223b !important;
+  background: #f8fafc !important;
+}
+.ProseMirror ::placeholder {
+  color: #a0aec0 !important;
+}
+.ProseMirror ul, .ProseMirror ol {
+  color: #22223b !important;
+}
 @import "tailwindcss";
 
 :root {

@@ -11,33 +11,19 @@ export interface AuthUser {
 }
 
 export async function getAuthenticatedUser(request: NextRequest): Promise<AuthUser | null> {
-  try {
-    // Get authorization header or session info
-    const authHeader = request.headers.get('authorization')
-    const userEmail = request.headers.get('x-user-email') // Custom header for our auth system
-    
-    if (!userEmail) {
-      return null
-    }
+  // This function is deprecated as it relied on an insecure header.
+  // The logic has been moved directly into the API routes that need it,
+  // using a secure cookie-based approach with '@supabase/ssr'.
+  // If you see this error, you need to refactor the calling code.
+  console.error(
+    "DEPRECATED: getAuthenticatedUser was called. This function is insecure. " +
+    "Refactor the caller to use cookie-based auth directly in the API route. " +
+    "Create a Supabase client with createRouteHandlerClient({ cookies }) " +
+    "and get the user via supabase.auth.getUser()."
+  );
 
-    // Get user from database
-    const { data: userData, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', userEmail)
-      .eq('is_active', true)
-      .eq('is_approved', true)
-      .single()
-
-    if (error || !userData) {
-      return null
-    }
-
-    return userData as AuthUser
-  } catch (error) {
-    console.error('Auth middleware error:', error)
-    return null
-  }
+  // Return null to ensure it fails safely if not caught.
+  return null;
 }
 
 export function requireAdmin(user: AuthUser | null): boolean {

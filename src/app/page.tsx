@@ -1,5 +1,7 @@
+
 import Link from "next/link";
 import BrandLogo from "@/components/BrandLogo";
+import AnnouncementBox from "@/components/AnnouncementBox";
 
 export default function Home() {
   return (
@@ -46,6 +48,11 @@ export default function Home() {
               🔐 Masuk ke Sistem
             </Link>
           </div>
+        </div>
+
+        {/* Announcements Section */}
+        <div className="max-w-5xl mx-auto mb-16">
+          <AnnouncementBox />
         </div>
 
         <div className="max-w-6xl mx-auto">

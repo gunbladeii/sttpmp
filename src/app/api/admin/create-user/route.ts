@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { supabase } from '@/lib/supabase'
 import { sendApprovalEmail } from '@/lib/email'
+import bcrypt from 'bcryptjs'
 
 export async function POST(req: NextRequest) {
   try {
@@ -77,11 +78,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Create user in public.users table
+    const passwordHash = await bcrypt.hash(password, 10)
+    
     const userData: any = {
       id: authUser.user.id,
       email,
       name,
       role,
+      password_hash: passwordHash,
       is_active: true,
       is_approved: true,
       email_verified: true,

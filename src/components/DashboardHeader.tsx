@@ -60,10 +60,7 @@ export default function DashboardHeader() {
 
           {/* Navigation Menu */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link 
-              href="/dashboard" 
-              className={getLinkClasses('/dashboard')}
-            >
+            <Link href="/dashboard" className={getLinkClasses('/dashboard')}> 
               Dashboard
             </Link>
             <Link 
@@ -72,10 +69,12 @@ export default function DashboardHeader() {
             >
               Syor
             </Link>
-            
             {/* Admin Only Links */}
             {user.role === 'admin' && (
               <>
+                <Link href="/admin/announcements" className={getLinkClasses('/admin/announcements', true)}>
+                  Pengumuman
+                </Link>
                 <Link 
                   href="/admin" 
                   className={getLinkClasses('/admin', true)}

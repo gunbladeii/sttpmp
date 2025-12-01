@@ -58,9 +58,6 @@ export default function DocumentList({ documents, onDocumentDeleted, canDelete }
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          // Send user info in headers for API route if needed
-          'x-user-id': user.id,
-          'x-user-email': user.email,
         },
       });
 

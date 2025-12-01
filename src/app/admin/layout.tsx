@@ -1,7 +1,7 @@
 'use client'
 
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+
+import DashboardHeader from '@/components/DashboardHeader'
 
 export default function AdminLayout({
   children,
@@ -10,8 +10,10 @@ export default function AdminLayout({
 }) {
   return (
     <>
-      {/* No additional wrapper - let the main DashboardHeader handle navigation */}
-      {children}
+      <DashboardHeader />
+      <main>
+        {children}
+      </main>
     </>
   )
 }

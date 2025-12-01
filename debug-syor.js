@@ -1,5 +1,5 @@
 // Debug script to check syor filtering issue
-const { createClient } = require('@supabase/supabase-js')
+import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://wxfqsrryhlzocnrmhgqw.supabase.co'
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind4ZnFzcnJ5aGx6b2Nucm1oZ3F3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk0MTE1MTIsImV4cCI6MjA0NDk4NzUxMn0.bYBwv4l2Ts4JGH3HJMTLS6pzWWOhvtOK-rLGzV4JiD4'

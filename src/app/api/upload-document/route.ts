@@ -2,18 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { uploadFileToLocalStorage, validatePDFFile, deleteFileFromLocalStorage } from '@/lib/googleDrive';
 import { createServerSupabaseClient } from '@/lib/supabase';
 
+import { createRouteHandlerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { Database } from '@/types/database.types';
+
 export async function POST(request: NextRequest) {
   try {
-    // Use service role to bypass RLS for now since we use custom auth
-    const supabase = createServerSupabaseClient(process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient<Database>({ cookies: () => cookieStore });
 
-    // For now, let's get the user from the form data or temporary bypass auth for testing
-    // TODO: Implement proper session-based auth later
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const syorId = formData.get('syorId') as string;
-    const userId = formData.get('userId') as string; // We'll send this from client
 
     if (!file || !syorId) {
       return NextResponse.json({ error: 'File and syor ID required' }, { status: 400 });
@@ -25,13 +33,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    // For testing, use a default user ID if not provided
-    const defaultUserId = userId || 'c47c6c9e-8b4a-4c1a-9c1e-6e4a8b9c1d2e'; // Admin user ID from sample data
-
-    // Upload to local storage
+    // Upload to local storage (or your chosen storage solution)
     const uploadResult = await uploadFileToLocalStorage(file, file.name, syorId);
 
-    // Save document info to database
+    // Save document info to database, associated with the authenticated user
     const { data: docData, error: docError } = await supabase
       .from('syor_documents')
       .insert([
@@ -42,7 +47,7 @@ export async function POST(request: NextRequest) {
           file_type: file.type,
           google_drive_id: uploadResult.id,
           google_drive_link: uploadResult.webViewLink,
-          uploaded_by: defaultUserId,
+          uploaded_by: user.id, // Securely use the authenticated user's ID
           uploaded_at: new Date().toISOString(),
         },
       ])
@@ -76,8 +81,16 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    // Use service role to bypass RLS for now since we use custom auth
-    const supabase = createServerSupabaseClient(process.env.SUPABASE_SERVICE_ROLE_KEY!);
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient<Database>({ cookies: () => cookieStore });
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const { searchParams } = new URL(request.url);
     const documentId = searchParams.get('documentId');
@@ -86,17 +99,36 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Document ID required' }, { status: 400 });
     }
 
-    // Get document info
+    // Get document info to verify ownership
     const { data: docData, error: docError } = await supabase
       .from('syor_documents')
-      .select('google_drive_id')
+      .select('google_drive_id, uploaded_by')
       .eq('id', documentId)
       .single();
 
-    if (docError) {
+    if (docError || !docData) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
+    // Get the current user's profile to check their role
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !userProfile) {
+      return NextResponse.json({ error: 'User profile not found' }, { status: 403 });
+    }
+
+    // Check for authorization: user must be owner or admin
+    const isOwner = docData.uploaded_by === user.id;
+    const isAdmin = userProfile.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    
     // Delete from local storage
     await deleteFileFromLocalStorage(docData.google_drive_id);
 

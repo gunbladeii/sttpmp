@@ -42,23 +42,23 @@ interface SyorDetail {
   title: string
   description: string
   priority: string
-  pemeriksaan_type: string
-  due_date: string
-  response_deadline: string
-  created_by: string
-  assigned_to_department: string | null
-  assigned_to_jpn: string | null
-  created_at: string
-  creator: { name: string }
-  department: { name: string; code: string } | null
-  jpn: { name: string; state: string } | null
-  status_tracking: Array<{
-    id: string
-    status: string
-    weight: number
-    comments: string
-    updated_at: string
-    updater: { name: string }
+  pemeriksaan_type?: string
+  due_date?: string
+  response_deadline?: string
+  created_by?: string
+  assigned_to_department?: string | null
+  assigned_to_jpn?: string | null
+  created_at?: string
+  creator?: { name?: string }
+  department?: { name?: string; code?: string } | null
+  jpn?: { name?: string; state?: string } | null
+  status_tracking?: Array<{
+    id?: string
+    status?: string
+    weight?: number
+    comments?: string
+    updated_at?: string
+    updater?: { name?: string }
   }>
 }
 
@@ -66,7 +66,7 @@ export default function SyorDetailsPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const params = useParams()
-  const syorId = params.id as string
+  const syorId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : ''
 
   const [syor, setSyor] = useState<SyorDetail | null>(null)
   const [documents, setDocuments] = useState<Document[]>([])
@@ -87,14 +87,14 @@ export default function SyorDetailsPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    priority: 'sederhana' as const,
-    pemeriksaan_type: 'mata_pelajaran' as const,
+    priority: '',
+    pemeriksaan_type: '',
     due_date: '',
     response_deadline: '',
     assigned_to_department: '',
     assigned_to_jpn: '',
     tindakan_comments: '',
-    tindakan_status: 'belum_selesai' as const
+    tindakan_status: 'belum_selesai'
   })
 
   // Fetch syor details
@@ -126,34 +126,57 @@ export default function SyorDetailsPage() {
             )
           `)
           .eq('id', syorId)
-          .single()
+          .maybeSingle()
 
-        if (fetchError) throw fetchError
+        if (fetchError) {
+          console.error('Syor fetch error:', fetchError, 'Data:', data, 'SyorId:', syorId)
+          throw new Error(fetchError?.message || 'Syor tidak dijumpai atau data tidak lengkap')
+        }
+        if (!data) {
+          setSyor(null);
+          setError('Syor tidak dijumpai. Data mungkin telah dipadam atau tidak lengkap.');
+          return;
+        }
 
         // Sort status_tracking to get the latest first
-        const sortedStatusTracking = data.status_tracking
-          ?.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+        const sortedStatusTracking = Array.isArray(data.status_tracking)
+          ? data.status_tracking.sort((a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime())
+          : [];
 
-        const latestStatusData = sortedStatusTracking?.[0]
+        const latestStatusData = sortedStatusTracking?.[0] || {};
 
-        setSyor(data)
+        setSyor({
+          ...data,
+          title: data.title || '-',
+          description: data.description || '-',
+          priority: data.priority || '-',
+          pemeriksaan_type: data.pemeriksaan_type || '-',
+          due_date: data.due_date || '-',
+          response_deadline: data.response_deadline || '-',
+          assigned_to_department: data.assigned_to_department || '-',
+          assigned_to_jpn: data.assigned_to_jpn || '-',
+          creator: data.creator || { name: '-' },
+          department: data.department || { name: '-', code: '-' },
+          jpn: data.jpn || { name: '-', state: '-' },
+          status_tracking: sortedStatusTracking
+        });
         setFormData({
           title: data.title || '',
           description: data.description || '',
-          priority: data.priority || 'sederhana',
-          pemeriksaan_type: data.pemeriksaan_type || 'mata_pelajaran',
+          priority: data.priority || '',
+          pemeriksaan_type: data.pemeriksaan_type || '',
           due_date: data.due_date || '',
           response_deadline: data.response_deadline || '',
           assigned_to_department: data.assigned_to_department || '',
           assigned_to_jpn: data.assigned_to_jpn || '',
           tindakan_comments: latestStatusData?.comments || '',
-          tindakan_status: latestStatusData?.status || 'belum_selesai'
-        })
-        setPemeriksaanSearch(data.title || '')
+          tindakan_status: latestStatusData?.status || ''
+        });
+        setPemeriksaanSearch(data.title || '-')
 
       } catch (err) {
         console.error('Error fetching syor details:', err)
-        setError(err instanceof Error ? err.message : 'Unknown error occurred')
+        setError(err instanceof Error ? err.message : 'Ralat memuat syor: ' + String(err))
       } finally {
         setLoading(false)
       }
@@ -269,7 +292,7 @@ export default function SyorDetailsPage() {
     if (!user || !syor) return
 
     setSaving(true)
-    setError('')
+    setError(null)
     setSuccess('')
 
     try {
@@ -280,6 +303,27 @@ export default function SyorDetailsPage() {
 
       if (!canEdit) {
         throw new Error('Anda tidak mempunyai kebenaran untuk mengedit syor ini')
+      }
+
+      // Date validation
+      const today = new Date()
+      const dueDate = new Date(formData.due_date)
+      const responseDeadline = new Date(formData.response_deadline)
+      const isDueDateOverdue = dueDate < today
+      const isResponseDeadlineOverdue = responseDeadline < today
+
+      // Only block non-admins if overdue
+      if ((isDueDateOverdue || isResponseDeadlineOverdue) && user.role !== 'admin') {
+        setError('Tarikh akhir tindakan atau tarikh maklum balas sudah lepas. Sila hubungi admin untuk ubah tarikh.');
+        setSaving(false);
+        return;
+      }
+
+      // For admin, allow save if both dates are in the future
+      if (user.role === 'admin' && (isDueDateOverdue || isResponseDeadlineOverdue)) {
+        setError('Admin boleh ubah tarikh, tetapi pastikan kedua-dua tarikh adalah selepas hari ini.');
+        setSaving(false);
+        return;
       }
 
       // Update syor basic info (only admin/peneraju can edit)
@@ -306,13 +350,14 @@ export default function SyorDetailsPage() {
 
       // Update status tracking (only penyelaras can update)
       if (canEditTindakan && formData.tindakan_comments.trim()) {
+        const statusEnum = ['belum_selesai', 'dalam_tindakan', 'selesai']
+        const safeStatus = statusEnum.includes(formData.tindakan_status) ? formData.tindakan_status : 'belum_selesai'
         const statusData = {
           syor_id: syorId,
           department_id: formData.assigned_to_department || null,
           jpn_id: formData.assigned_to_jpn || null,
-          status: formData.tindakan_status,
-          weight: formData.tindakan_status === 'belum_selesai' ? 0 : 
-                 formData.tindakan_status === 'dalam_tindakan' ? 0.5 : 1,
+          status: safeStatus,
+          weight: safeStatus === 'belum_selesai' ? 0 : safeStatus === 'dalam_tindakan' ? 0.5 : 1,
           comments: formData.tindakan_comments.trim(),
           updated_by: user.id,
           updated_at: new Date().toISOString()
@@ -326,8 +371,8 @@ export default function SyorDetailsPage() {
       }
 
       setSuccess('Syor berjaya dikemas kini!')
+      setError(null)
       setIsEditing(false)
-
       // Redirect to syor list page
       setTimeout(() => {
         router.push('/syor')
@@ -383,36 +428,39 @@ export default function SyorDetailsPage() {
     setSuccess('Dokumen berjaya dipadam!')
   }
 
-  const canEdit = user && syor && (
-    user.role === 'admin' || 
-    user.role === 'peneraju_pemeriksaan' || 
-    (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
-    (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
-    // Note: penyelaras_jnn NOT included - they have read-only access
+  const canEdit = Boolean(
+    user && syor && (
+      user.role === 'admin' ||
+      user.role === 'peneraju_pemeriksaan' ||
+      (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
+      (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
+    )
   )
 
-  const canEditBasicInfo = user && (user.role === 'admin' || user.role === 'peneraju_pemeriksaan')
-  
-  const canEditTindakan = user && syor && (
-    user.role === 'admin' || 
-    user.role === 'peneraju_pemeriksaan' ||
-    (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
-    (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
-    // Note: penyelaras_jnn NOT included - they can only view, not edit
+  const canEditBasicInfo = Boolean(user && (user.role === 'admin' || user.role === 'peneraju_pemeriksaan'))
+
+  const canEditTindakan = Boolean(
+    user && syor && (
+      user.role === 'admin' ||
+      user.role === 'peneraju_pemeriksaan' ||
+      (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
+      (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
+    )
   )
 
-  const canUploadDocuments = user && syor && (
-    user.role === 'admin' || 
-    user.role === 'peneraju_pemeriksaan' ||
-    (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
-    (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
-    // Note: penyelaras_jnn NOT included - they cannot upload documents
+  const canUploadDocuments = Boolean(
+    user && syor && (
+      user.role === 'admin' ||
+      user.role === 'peneraju_pemeriksaan' ||
+      (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
+      (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
+    )
   )
 
-  const canDeleteHistory = user && (user.role === 'admin' || user.role === 'peneraju_pemeriksaan')
-  
+  const canDeleteHistory = Boolean(user && (user.role === 'admin' || user.role === 'peneraju_pemeriksaan'))
+
   // Read-only indicator for penyelaras_jnn
-  const isReadOnly = user && user.role === 'penyelaras_jnn'
+  // Removed unused variable isReadOnly
 
   // Check authentication - redirect if no user
   useEffect(() => {
@@ -477,8 +525,9 @@ export default function SyorDetailsPage() {
   }
 
   // Get the latest status by sorting by updated_at descending
-  const latestStatus = syor.status_tracking
-    ?.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())?.[0]
+  const latestStatus = Array.isArray(syor.status_tracking)
+    ? [...syor.status_tracking].sort((a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime())[0]
+    : undefined
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
@@ -615,7 +664,7 @@ export default function SyorDetailsPage() {
                     )}
                   </div>
                 ) : (
-                  <h2 className="text-2xl font-bold text-white">{syor.title}</h2>
+                  <h2 className="text-2xl font-bold text-white">{!syor.title || syor.title === '-' ? 'Tidak Berkaitan' : syor.title}</h2>
                 )}
               </div>
 
@@ -625,19 +674,19 @@ export default function SyorDetailsPage() {
                   Kandungan Syor (Perakuan Menteri)
                 </label>
                 {isEditing && canEditBasicInfo ? (
-                  <div
-                    contentEditable="true"
-                    onInput={handleRichTextChange}
+                  <textarea
+                    name="description"
+                    value={formData.description.replace(/<[^>]+>/g, '')}
+                    onChange={handleInputChange}
+                    rows={6}
                     className="w-full min-h-32 px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white focus:outline-none rich-text-content"
-                    style={{ minHeight: '150px' }}
-                    suppressContentEditableWarning={true}
-                    dangerouslySetInnerHTML={{ __html: formData.description }}
+                    placeholder="Masukkan kandungan syor..."
                   />
                 ) : (
                   <div 
                     className="rich-text-content bg-slate-700/30 p-6 rounded-lg leading-relaxed"
                     style={{ color: '#cbd5e1 !important' }}
-                    dangerouslySetInnerHTML={{ __html: syor.description }}
+                    dangerouslySetInnerHTML={{ __html: (!syor.description || syor.description === '-' || syor.description === '<p>-</p>' || syor.description === '<p></p>' || syor.description.trim() === '') ? '<p>Tidak Berkaitan</p>' : syor.description }}
                   />
                 )}
               </div>
@@ -664,7 +713,9 @@ export default function SyorDetailsPage() {
                     </select>
                   ) : (
                     <p className="text-slate-300 text-lg">
-                      {syor.department ? `${syor.department.name} (${syor.department.code})` : 'Tidak ditetapkan'}
+                      {(!syor.department || !syor.department.name || syor.department.name === '-' || !syor.department.code || syor.department.code === '-')
+                        ? 'Tidak Berkaitan'
+                        : `${syor.department.name} (${syor.department.code})`}
                     </p>
                   )}
                 </div>
@@ -689,7 +740,9 @@ export default function SyorDetailsPage() {
                     </select>
                   ) : (
                     <p className="text-slate-300 text-lg">
-                      {syor.jpn ? `${syor.jpn.name} (${syor.jpn.state})` : 'Tidak ditetapkan'}
+                      {(!syor.jpn || !syor.jpn.name || syor.jpn.name === '-' || !syor.jpn.state || syor.jpn.state === '-')
+                        ? 'Tidak Berkaitan'
+                        : `${syor.jpn.name} (${syor.jpn.state})`}
                     </p>
                   )}
                 </div>
@@ -720,7 +773,7 @@ export default function SyorDetailsPage() {
                       syor.priority === 'sederhana' ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' :
                       'bg-green-500/20 text-green-300 border-green-500/30'
                     }`}>
-                      {capitalizeWords(syor.priority)}
+                      {!syor.priority || syor.priority === '-' ? 'Tidak Berkaitan' : capitalizeWords(syor.priority)}
                     </span>
                   )}
                 </div>
@@ -744,7 +797,7 @@ export default function SyorDetailsPage() {
                     </select>
                   ) : (
                     <p className="text-slate-300 text-lg">
-                      {capitalizeWords(syor.pemeriksaan_type.replace('_', ' '))}
+                      {!syor.pemeriksaan_type || syor.pemeriksaan_type === '-' ? 'Tidak Berkaitan' : capitalizeWords(syor.pemeriksaan_type.replace('_', ' '))}
                     </p>
                   )}
                 </div>
@@ -765,7 +818,7 @@ export default function SyorDetailsPage() {
                       className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
                     />
                   ) : (
-                    <p className="text-slate-300 text-lg">{formatDate(syor.due_date)}</p>
+                    <p className="text-slate-300 text-lg">{!syor.due_date || syor.due_date === '-' ? 'Tidak Berkaitan' : formatDate(syor.due_date)}</p>
                   )}
                 </div>
 
@@ -782,7 +835,7 @@ export default function SyorDetailsPage() {
                       className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
                     />
                   ) : (
-                    <p className="text-slate-300 text-lg">{formatDate(syor.response_deadline)}</p>
+                    <p className="text-slate-300 text-lg">{!syor.response_deadline || syor.response_deadline === '-' ? 'Tidak Berkaitan' : formatDate(syor.response_deadline)}</p>
                   )}
                 </div>
               </div>
@@ -842,7 +895,7 @@ export default function SyorDetailsPage() {
                       ) : (
                         <div className="bg-slate-800/30 p-4 rounded-lg border border-slate-700/30">
                           <p className="text-slate-200">
-                            {latestStatus?.comments || 'Tiada maklum balas'}
+                            {!latestStatus?.comments || latestStatus.comments === '-' ? 'Tidak Berkaitan' : latestStatus.comments}
                           </p>
                           {latestStatus?.updated_at && (
                             <p className="text-sm text-slate-400 mt-2">

@@ -73,6 +73,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to approve registration' }, { status: 500 })
     }
 
+    // Enable the auth user account by confirming email
+    const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(
+      requestId,
+      { email_confirm: true }
+    )
+
+    if (authUpdateError) {
+      console.error('Error updating auth user:', authUpdateError)
+      // Don't fail the whole operation, just log it
+    }
+
     // Send approval email
     if (updatedUser) {
       const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`

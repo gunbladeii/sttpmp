@@ -73,19 +73,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (email: string) => {
     try {
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .eq('is_active', true)
-        .eq('is_approved', true)
-        .single()
+      // Fetch user profile via API route (bypasses RLS using service role)
+      const profileResponse = await fetch('/api/auth/get-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
+      });
 
-      if (userError || !userData) {
+      const profileData = await profileResponse.json();
+
+      if (!profileData.success || !profileData.user) {
         throw new Error('User profile not found or not approved')
       }
 
-      setUser(userData as unknown as User)
+      setUser(profileData.user as unknown as User)
     } catch (err) {
       console.error('Error fetching user profile:', err)
       await supabase.auth.signOut()
@@ -102,54 +105,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('Hanya email dengan domain @moe.gov.my yang dibenarkan')
       }
 
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', credentials.email)
-        .single()
-
-      if (userError || !userData) {
-        throw new Error('Email atau password tidak betul')
-      }
-
-      const userDataAny = userData as Record<string, unknown>
-
-      if (!userDataAny.is_active) {
-        throw new Error('Akaun telah dinyahaktifkan. Sila hubungi admin.')
-      }
-
-      if (!userDataAny.is_approved) {
-        throw new Error('Akaun belum diluluskan oleh admin. Sila tunggu kelulusan.')
-      }
-
-      const isValidPassword = credentials.password === userDataAny.password_plain || 
-                             credentials.password === 'Admin123!'
-
-      if (!isValidPassword) {
-        throw new Error('Email atau password tidak betul')
-      }
-
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      // Use Supabase Auth for secure login
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password
       })
 
       if (authError) {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email: credentials.email,
-          password: credentials.password,
-          options: {
-            emailRedirectTo: undefined
-          }
-        })
+        throw new Error('Email atau password tidak betul')
+      }
 
-        if (signUpError) {
-          console.error('Auth signup error:', signUpError)
-        }
+      // Fetch user profile via API route (bypasses RLS using service role)
+      const profileResponse = await fetch('/api/auth/get-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: credentials.email })
+      });
+
+      const profileData = await profileResponse.json();
+
+      if (!profileData.success || !profileData.user) {
+        await supabase.auth.signOut()
+        throw new Error('Profil pengguna tidak dijumpai')
+      }
+
+      const userData = profileData.user;
+
+      if (!userData.is_active) {
+        await supabase.auth.signOut()
+        throw new Error('Akaun telah dinyahaktifkan. Sila hubungi admin.')
+      }
+
+      if (!userData.is_approved) {
+        await supabase.auth.signOut()
+        throw new Error('Akaun belum diluluskan oleh admin. Sila tunggu kelulusan.')
       }
 
       setUser(userData as unknown as User)
-
       return { success: true }
 
     } catch (err: unknown) {
