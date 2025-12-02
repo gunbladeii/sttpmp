@@ -209,6 +209,7 @@ export default function AdminAnnouncementsPage() {
                   hour: '2-digit', 
                   minute: '2-digit' 
                 })}</span>
+                <span>👤 Dibuat oleh: {(a as any).author?.name || 'Unknown'}</span>
               </div>
             </div>
           ))

@@ -72,7 +72,14 @@ export async function GET(req: Request) {
     console.log('✅ Admin access - fetching all announcements');
     const { data, error } = await supabaseAdmin
       .from('announcements')
-      .select('*')
+      .select(`
+        *,
+        author:users!author_id (
+          id,
+          name,
+          email
+        )
+      `)
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -88,7 +95,14 @@ export async function GET(req: Request) {
   console.log('👤 Public access - fetching published only');
   const { data, error } = await supabaseAdmin
     .from('announcements')
-    .select('*')
+    .select(`
+      *,
+      author:users!author_id (
+        id,
+        name,
+        email
+      )
+    `)
     .eq('published', true)
     .order('created_at', { ascending: false });
   
