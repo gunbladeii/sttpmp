@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuthSimple'
+import { useSyorRealtime } from '@/hooks/useSyorRealtime'
 import DashboardHeader from '@/components/DashboardHeader'
 import type { Syor } from '@/types'
 import { getStatusColor, formatDate, getStatusText, capitalizeWords } from '@/lib/utils'
@@ -23,95 +24,123 @@ export default function SyorList() {
     }
   }, [user, authLoading])
 
-  useEffect(() => {
-    async function fetchSyor() {
-      try {
-        setLoading(true)
-        setError(null)
+  // Fetch syor data - extracted as separate function for reuse
+  const fetchSyor = async () => {
+    try {
+      setLoading(true)
+      setError(null)
 
-        // First, fetch user details with department/JPN information
-        if (user?.id) {
-          const { data: userWithDetails, error: userError } = await supabase
-            .from('users')
-            .select(`
-              *,
-              department:department_id(id, name, code, sector),
-              jpn:jpn_id(id, name, state)
-            `)
-            .eq('id', user.id)
-            .single()
-
-          if (userError) {
-            console.error('Error fetching user details:', userError)
-          } else {
-            setUserDetails(userWithDetails)
-          }
-        }
-
-        // Build query based on user's role
-        let query = supabase
-          .from('syor')
+      // First, fetch user details with department/JPN information
+      if (user?.id) {
+        const { data: userWithDetails, error: userError } = await supabase
+          .from('users')
           .select(`
             *,
-            creator:created_by(name, sector),
-            department:assigned_to_department(name, code, sector),
-            jpn:assigned_to_jpn(name, state),
-            status_tracking(
-              id,
-              status,
-              weight,
-              comments,
-              updated_at,
-              updater:updated_by(name)
-            )
+            department:department_id(id, name, code, sector),
+            jpn:jpn_id(id, name, state)
           `)
+          .eq('id', user.id)
+          .single()
 
-        // Apply role-based filtering
-        if (user?.role === 'penyelaras_bahagian' && user?.department_id) {
-          // Penyelaras Bahagian: only see syor assigned to their department
-          query = query.eq('assigned_to_department', user.department_id)
-        } else if ((user?.role === 'penyelaras_jpn' || user?.role === 'penyelaras_jnn') && user?.jpn_id) {
-          // Penyelaras JPN & JNN: only see syor assigned to their JPN
-          // (JNN has read-only access, JPN has edit access)
-          query = query.eq('assigned_to_jpn', user.jpn_id)
-        } else if (user?.role === 'peneraju_pemeriksaan' && user?.sector) {
-          // Peneraju Pemeriksaan: see syor created by users in their sector
-          // Filter by created_by users who have the same sector
-          
-          // Get users in their sector (both peneraju and other roles)
-          const { data: usersInSector } = await supabase
-            .from('users')
-            .select('id')
-            .eq('sector', user.sector)
-          
-          if (usersInSector && usersInSector.length > 0) {
-            const userIds = usersInSector.map(u => u.id)
-            // Show syor created by users in their sector
-            query = query.in('created_by', userIds)
-          } else {
-            // If no users in their sector, show no syor (edge case)
-            query = query.eq('created_by', 'non-existent-id')
-          }
+        if (userError) {
+          console.error('Error fetching user details:', userError)
+        } else {
+          setUserDetails(userWithDetails)
         }
-        // Admin and pemantau can see all syor (no filter)
-
-        const { data, error: fetchError } = await query.order('created_at', { ascending: false })
-
-        if (fetchError) throw fetchError
-
-        setSyor(data || [])
-      } catch (err) {
-        console.error('Error fetching syor:', err)
-        setError(err instanceof Error ? err.message : 'Unknown error occurred')
-      } finally {
-        setLoading(false)
       }
-    }
 
+      // Build query based on user's role
+      let query = supabase
+        .from('syor')
+        .select(`
+          *,
+          creator:created_by(name, sector),
+          department:assigned_to_department(name, code, sector),
+          jpn:assigned_to_jpn(name, state),
+          status_tracking(
+            id,
+            status,
+            weight,
+            comments,
+            updated_at,
+            updater:updated_by(name)
+          )
+        `)
+
+      // Apply role-based filtering
+      if (user?.role === 'penyelaras_bahagian' && user?.department_id) {
+        // Penyelaras Bahagian: only see syor assigned to their department
+        query = query.eq('assigned_to_department', user.department_id)
+      } else if ((user?.role === 'penyelaras_jpn' || user?.role === 'penyelaras_jnn') && user?.jpn_id) {
+        // Penyelaras JPN & JNN: only see syor assigned to their JPN
+        // (JNN has read-only access, JPN has edit access)
+        query = query.eq('assigned_to_jpn', user.jpn_id)
+      } else if (user?.role === 'peneraju_pemeriksaan' && user?.sector) {
+        // Peneraju Pemeriksaan: see syor created by users in their sector
+        // Filter by created_by users who have the same sector
+        
+        // Get users in their sector (both peneraju and other roles)
+        const { data: usersInSector } = await supabase
+          .from('users')
+          .select('id')
+          .eq('sector', user.sector)
+        
+        if (usersInSector && usersInSector.length > 0) {
+          const userIds = usersInSector.map(u => u.id)
+          // Show syor created by users in their sector
+          query = query.in('created_by', userIds)
+        } else {
+          // If no users in their sector, show no syor (edge case)
+          query = query.eq('created_by', 'non-existent-id')
+        }
+      }
+      // Admin and pemantau can see all syor (no filter)
+
+      const { data, error: fetchError } = await query.order('created_at', { ascending: false })
+
+      if (fetchError) throw fetchError
+
+      setSyor(data || [])
+    } catch (err) {
+      console.error('Error fetching syor:', err)
+      setError(err instanceof Error ? err.message : 'Unknown error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     if (user) {
       fetchSyor()
     }
   }, [user])
+
+  // 🔴 REALTIME SUBSCRIPTION - Auto update when syor changes
+  useSyorRealtime({
+    onInsert: (payload) => {
+      console.log('🆕 Syor baru dicipta:', payload.new)
+      // Refresh syor list to get new syor with all relations
+      if (user) {
+        // Re-fetch to get complete data with joins
+        fetchSyor()
+      }
+    },
+    onUpdate: (payload) => {
+      console.log('📝 Syor dikemaskini:', payload.new)
+      // Update the specific syor in the list
+      setSyor(prev => prev.map(s => 
+        s.id === payload.new.id 
+          ? { ...s, ...payload.new } // Merge update
+          : s
+      ))
+    },
+    onDelete: (payload) => {
+      console.log('🗑️ Syor dipadam:', payload.old)
+      // Remove from list
+      setSyor(prev => prev.filter(s => s.id !== payload.old.id))
+    },
+    enabled: !!user // Only enable when user is logged in
+  })
 
   const filteredSyor = filter === 'all' 
     ? syor 
