@@ -6,30 +6,35 @@ import AnnouncementBox from "@/components/AnnouncementBox";
 export default function Home() {
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Abstract Background with Malaysian Theme */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800"></div>
-      
-      {/* Abstract Brush Paint Elements */}
-      <div className="absolute inset-0 opacity-20">
-        {/* Top Right Yellow Brush - Represents Royal Yellow */}
-        <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full blur-3xl transform rotate-45"></div>
+      {/* Background Image dengan Overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('/minister-bg.jpg')`,
+        }}
+      >
+        {/* Dark Overlay dengan Gradient untuk readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-blue-900/90 to-slate-800/95"></div>
         
-        {/* Left Blue Brush - Represents Unity */}
-        <div className="absolute top-1/4 -left-32 w-80 h-80 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-full blur-3xl"></div>
-        
-        {/* Bottom Right Red Brush - Represents Courage */}
-        <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-gradient-to-tl from-red-500 to-pink-500 rounded-full blur-3xl"></div>
-        
-        {/* Center Harmony Element */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-blue-600 via-purple-500 to-blue-600 rounded-full blur-3xl opacity-30"></div>
+        {/* Subtle Pattern Overlay */}
+        <div className="absolute inset-0 opacity-10" style={{
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                           linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)`,
+          backgroundSize: '50px 50px'
+        }}></div>
       </div>
 
-      {/* Subtle Grid Pattern Overlay */}
-      <div className="absolute inset-0 opacity-5" style={{
-        backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-                         linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)`,
-        backgroundSize: '50px 50px'
-      }}></div>
+      {/* Abstract Accent Elements - Lebih subtle */}
+      <div className="absolute inset-0 opacity-10">
+        {/* Top Right Yellow Accent */}
+        <div className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full blur-3xl"></div>
+        
+        {/* Left Blue Accent */}
+        <div className="absolute top-1/4 -left-32 w-80 h-80 bg-gradient-to-tr from-blue-500 to-cyan-400 rounded-full blur-3xl"></div>
+        
+        {/* Bottom Right Accent */}
+        <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-gradient-to-tl from-purple-500 to-pink-500 rounded-full blur-3xl"></div>
+      </div>
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-6 py-20">
