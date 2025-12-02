@@ -322,7 +322,7 @@ export type Database = {
         Row: {
           id: string;
           title: string;
-          content: string | null;
+          description: string | null;
           image_url: string | null;
           published: boolean;
           author_id: string | null;
@@ -332,7 +332,7 @@ export type Database = {
         Insert: {
           id?: string;
           title: string;
-          content?: string | null;
+          description?: string | null;
           image_url?: string | null;
           published?: boolean;
           author_id?: string | null;
@@ -342,7 +342,7 @@ export type Database = {
         Update: {
           id?: string;
           title?: string;
-          content?: string | null;
+          description?: string | null;
           image_url?: string | null;
           published?: boolean;
           author_id?: string | null;
