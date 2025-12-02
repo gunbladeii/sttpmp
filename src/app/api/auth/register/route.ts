@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { sendRegistrationPendingEmail, sendAdminNewRegistrationEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
@@ -87,6 +88,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         error: `Gagal menyimpan permohonan pendaftaran: ${insertError.message}` 
       }, { status: 500 })
+    }
+
+    // Send email notifications
+    try {
+      // Send confirmation email to user
+      await sendRegistrationPendingEmail({
+        to: email,
+        userName: name
+      })
+
+      // Send notification to admins
+      await sendAdminNewRegistrationEmail({
+        userName: name,
+        userEmail: email,
+        requestedRole: requestedRole || null,
+        registrationId: authUser.user.id
+      })
+
+      console.log('✅ Registration emails sent successfully')
+    } catch (emailError) {
+      console.error('❌ Error sending registration emails:', emailError)
+      // Don't fail registration if email fails
     }
 
     return NextResponse.json({ 

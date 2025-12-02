@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { sendRejectionEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,7 +39,14 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Delete the rejected user from the users table (for real users)
+    // Get user info before deletion for email
+    const { data: userToReject } = await supabaseAdmin
+      .from('users')
+      .select('email, name')
+      .eq('id', requestId)
+      .single()
+
+    // Delete the rejected user from the users table
     const { error: deleteError } = await supabaseAdmin
       .from('users')
       .delete()
@@ -47,6 +55,30 @@ export async function POST(request: NextRequest) {
     if (deleteError) {
       console.error('Error rejecting registration:', deleteError)
       return NextResponse.json({ error: 'Failed to reject registration' }, { status: 500 })
+    }
+
+    // Delete from auth.users to prevent memory leak
+    try {
+      await supabaseAdmin.auth.admin.deleteUser(requestId)
+      console.log('✅ Auth user deleted:', requestId)
+    } catch (authError) {
+      console.error('❌ Error deleting auth user:', authError)
+      // Continue even if auth deletion fails
+    }
+
+    // Send rejection email to user
+    if (userToReject) {
+      try {
+        await sendRejectionEmail({
+          to: userToReject.email,
+          userName: userToReject.name || userToReject.email,
+          reason
+        })
+        console.log('✅ Rejection email sent to:', userToReject.email)
+      } catch (emailError) {
+        console.error('❌ Error sending rejection email:', emailError)
+        // Don't fail the rejection if email fails
+      }
     }
 
     return NextResponse.json({

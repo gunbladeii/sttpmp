@@ -280,6 +280,218 @@ interface SendDeadlineReminderParams {
   assignedTo: string
 }
 
+// Send email to user confirming registration pending approval
+interface SendRegistrationPendingEmailParams {
+  to: string
+  userName: string
+}
+
+export async function sendRegistrationPendingEmail({
+  to,
+  userName,
+}: SendRegistrationPendingEmailParams) {
+  try {
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="ms">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Pendaftaran Diterima</title>
+        </head>
+        <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
+          
+          <div style="background: linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h1 style="color: #a78bfa; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 2px;">STTPMP</h1>
+            <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 14px;">Kementerian Pendidikan Malaysia</p>
+          </div>
+
+          <div style="background: white; padding: 40px 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            
+            <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 8px;">✅</div>
+              <h2 style="color: #1e40af; margin: 0; font-size: 20px;">Pendaftaran Diterima</h2>
+            </div>
+
+            <p style="font-size: 16px; color: #475569; margin-bottom: 24px;">
+              Assalamualaikum <strong style="color: #0f172a;">${userName}</strong>,
+            </p>
+
+            <p style="font-size: 15px; color: #475569; line-height: 1.8; margin-bottom: 24px;">
+              Terima kasih kerana mendaftar untuk menggunakan Sistem Tindakan Terhadap Perakuan Menteri Pendidikan (STTPMP).
+            </p>
+
+            <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 20px; margin-bottom: 24px; border-radius: 4px;">
+              <p style="margin: 0 0 8px 0; font-size: 14px; color: #166534; font-weight: 600;">📋 Status Permohonan:</p>
+              <p style="margin: 0; font-size: 15px; color: #15803d;">Permohonan anda sedang menunggu kelulusan dari Administrator sistem.</p>
+            </div>
+
+            <p style="font-size: 15px; color: #475569; line-height: 1.8; margin-bottom: 24px;">
+              Anda akan menerima notifikasi email apabila akaun anda telah diluluskan dan diaktifkan oleh Administrator.
+            </p>
+
+            <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 16px; margin-top: 24px;">
+              <p style="margin: 0 0 8px 0; font-size: 14px; color: #92400e; font-weight: 600;">⏳ Seterusnya:</p>
+              <ul style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: #92400e;">
+                <li>Sila tunggu kelulusan dari Administrator (biasanya dalam 1-2 hari bekerja)</li>
+                <li>Anda akan menerima email pengesahan setelah akaun diluluskan</li>
+                <li>Selepas itu, anda boleh log masuk menggunakan kredential yang didaftarkan</li>
+              </ul>
+            </div>
+
+          </div>
+
+          <div style="margin-top: 24px; padding: 20px; text-align: center; color: #64748b; font-size: 13px;">
+            <p style="margin: 0;">🇲🇾 Jemaah Nazir | Kementerian Pendidikan Malaysia</p>
+          </div>
+
+        </body>
+        </html>
+      `
+
+    await sendEmail({
+      to,
+      subject: '✅ Pendaftaran STTPMP Diterima - Menunggu Kelulusan',
+      htmlContent,
+      name: userName
+    })
+
+    console.log('✅ Registration pending email sent to:', to)
+    return { success: true }
+  } catch (error) {
+    console.error('❌ Error sending registration pending email:', error)
+    throw error
+  }
+}
+
+// Send email to admin notifying new registration
+interface SendAdminNewRegistrationEmailParams {
+  userName: string
+  userEmail: string
+  requestedRole: string | null
+  registrationId: string
+}
+
+export async function sendAdminNewRegistrationEmail({
+  userName,
+  userEmail,
+  requestedRole,
+  registrationId,
+}: SendAdminNewRegistrationEmailParams) {
+  try {
+    const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/users`
+    
+    const roleNames: Record<string, string> = {
+      penyelaras_bahagian: 'Penyelaras Bahagian',
+      penyelaras_jpn: 'Penyelaras JPN',
+      penyelaras_jnn: 'Penyelaras JNN (View Only)',
+      peneraju_pemeriksaan: 'Peneraju Pemeriksaan',
+      pemantau: 'Pemantau',
+    }
+
+    const requestedRoleName = requestedRole ? roleNames[requestedRole] || requestedRole : 'Tidak dinyatakan'
+
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="ms">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Pendaftaran Baharu</title>
+        </head>
+        <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
+          
+          <div style="background: linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h1 style="color: #a78bfa; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 2px;">STTPMP</h1>
+            <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 14px;">Admin Notification</p>
+          </div>
+
+          <div style="background: white; padding: 40px 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            
+            <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 8px;">👤</div>
+              <h2 style="color: #92400e; margin: 0; font-size: 20px;">Pendaftaran Pengguna Baharu</h2>
+            </div>
+
+            <p style="font-size: 16px; color: #475569; margin-bottom: 24px;">
+              Terdapat permohonan pendaftaran baharu yang memerlukan kelulusan anda.
+            </p>
+
+            <div style="background: #f1f5f9; border-left: 4px solid #3b82f6; padding: 20px; margin-bottom: 24px; border-radius: 4px;">
+              <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; font-weight: 600; text-transform: uppercase;">MAKLUMAT PENGGUNA:</p>
+              
+              <div style="margin-bottom: 12px;">
+                <p style="margin: 0 0 4px 0; font-size: 12px; color: #64748b;">Nama:</p>
+                <p style="margin: 0; font-size: 15px; color: #0f172a; font-weight: 600;">${userName}</p>
+              </div>
+
+              <div style="margin-bottom: 12px;">
+                <p style="margin: 0 0 4px 0; font-size: 12px; color: #64748b;">Email:</p>
+                <p style="margin: 0; font-size: 15px; color: #0f172a; font-weight: 600;">${userEmail}</p>
+              </div>
+
+              <div>
+                <p style="margin: 0 0 4px 0; font-size: 12px; color: #64748b;">Peranan Dimohon:</p>
+                <p style="margin: 0; font-size: 15px; color: #0f172a; font-weight: 600;">${requestedRoleName}</p>
+              </div>
+            </div>
+
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${adminUrl}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);">
+                🔍 Semak Permohonan
+              </a>
+            </div>
+
+            <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px; margin-top: 24px;">
+              <p style="margin: 0 0 8px 0; font-size: 14px; color: #0c4a6e; font-weight: 600;">ℹ️ Tindakan Diperlukan:</p>
+              <ul style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: #075985;">
+                <li>Klik butang "Semak Permohonan" untuk menyemak detail lengkap</li>
+                <li>Luluskan atau tolak permohonan melalui panel admin</li>
+                <li>Tetapkan peranan dan bahagian/JPN yang sesuai jika diluluskan</li>
+              </ul>
+            </div>
+
+          </div>
+
+          <div style="margin-top: 24px; padding: 20px; text-align: center; color: #64748b; font-size: 13px;">
+            <p style="margin: 0;">Email notifikasi automatik - STTPMP Admin Panel</p>
+          </div>
+
+        </body>
+        </html>
+      `
+
+    // Send to all admins
+    const { data: admins } = await supabaseAdmin
+      .from('users')
+      .select('email, name')
+      .eq('role', 'admin')
+      .eq('is_active', true)
+      .eq('is_approved', true)
+
+    if (admins && admins.length > 0) {
+      const adminRecipients = admins.map(admin => ({
+        email: admin.email,
+        name: admin.name
+      }))
+
+      await sendEmail({
+        to: adminRecipients,
+        subject: '🔔 Pendaftaran Baharu Memerlukan Kelulusan - STTPMP',
+        htmlContent
+      })
+
+      console.log('✅ Admin notification sent to:', adminRecipients.map(a => a.email).join(', '))
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('❌ Error sending admin notification:', error)
+    // Don't throw error - registration should succeed even if email fails
+    return { success: false, error }
+  }
+}
+
 export async function sendDeadlineReminder({
   to,
   penyelarasName,

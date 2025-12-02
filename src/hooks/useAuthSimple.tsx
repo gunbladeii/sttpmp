@@ -10,12 +10,14 @@ interface AuthContextType {
   error: string
   login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>
   register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>
+  requestAccess: (email: string, name: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   clearError: () => void
   hasRole: (roles: RoleType | RoleType[]) => boolean
   canAssignSyor: () => boolean
   canUpdateStatus: () => boolean
   canViewAllSyor: () => boolean
+  supabaseUser?: any
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
@@ -24,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [supabaseUser, setSupabaseUser] = useState<any>(null)
   const supabase = createBrowserSupabaseClient()
 
   useEffect(() => {
@@ -33,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Auth state change:', event)
       
       if (session?.user) {
+        setSupabaseUser(session.user)
         try {
           await fetchUserProfile(session.user.email!)
         } catch (err) {
@@ -41,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         setUser(null)
+        setSupabaseUser(null)
       }
       setLoading(false)
     })
@@ -185,6 +190,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const requestAccess = async (email: string, name: string) => {
+    try {
+      setLoading(true)
+      setError('')
+
+      const response = await fetch('/api/access-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, name })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Gagal menghantar permohonan')
+      }
+
+      return { success: true }
+
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Ralat tidak diketahui berlaku'
+      setError(errorMessage)
+      return { success: false, error: errorMessage }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const logout = async () => {
     try {
       setLoading(true)
@@ -233,12 +268,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error,
         login,
         register,
+        requestAccess,
         logout,
         clearError,
         hasRole,
         canAssignSyor,
         canUpdateStatus,
         canViewAllSyor,
+        supabaseUser,
       }}
     >
       {children}
