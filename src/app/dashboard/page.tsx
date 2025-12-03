@@ -460,78 +460,72 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - 2x2 Grid for Mobile */}
         {stats && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+            {/* Total Syor */}
             <div 
-              className="cloudpeak-card p-4 sm:p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
+              className="cloudpeak-card p-3 sm:p-4 md:p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
               onClick={() => handleScoreCardClick('all', 'Semua Syor')}
             >
-              <div className="flex items-center">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg mb-2">
                   <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <div className="ml-3 sm:ml-4">
-                  <p className="text-xs sm:text-sm font-medium text-slate-400">Total Syor</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-white">{stats.total_syor}</p>
-                  <p className="text-xs text-slate-500 mt-1 hidden sm:block">Klik untuk lihat semua</p>
-                </div>
+                <p className="text-xs sm:text-sm font-medium text-slate-400 mb-1">Total</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{stats.total_syor}</p>
               </div>
             </div>
 
+            {/* Selesai */}
             <div 
-              className="cloudpeak-card p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
+              className="cloudpeak-card p-3 sm:p-4 md:p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
               onClick={() => handleScoreCardClick('selesai', 'Senarai Syor Selesai')}
             >
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg mb-2">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-slate-400">Selesai</p>
-                  <p className="text-3xl font-bold text-white">{stats.selesai}</p>
-                  <p className="text-xs text-slate-500 mt-1">Klik untuk lihat senarai</p>
-                </div>
+                <p className="text-xs sm:text-sm font-medium text-slate-400 mb-1">Selesai</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{stats.selesai}</p>
               </div>
             </div>
 
+            {/* Dalam Tindakan */}
             <div 
-              className="cloudpeak-card p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
+              className="cloudpeak-card p-3 sm:p-4 md:p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
               onClick={() => handleScoreCardClick('dalam_tindakan', 'Senarai Syor Dalam Tindakan')}
             >
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg mb-2">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-slate-400">Dalam Tindakan</p>
-                  <p className="text-3xl font-bold text-white">{stats.dalam_tindakan}</p>
-                  <p className="text-xs text-slate-500 mt-1">Klik untuk lihat senarai</p>
-                </div>
+                <p className="text-xs sm:text-sm font-medium text-slate-400 mb-1">Tindakan</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{stats.dalam_tindakan}</p>
               </div>
             </div>
 
+            {/* Belum Selesai */}
             <div 
-              className="cloudpeak-card p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
+            {/* Belum Selesai */}
+            <div 
+              className="cloudpeak-card p-3 sm:p-4 md:p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
               onClick={() => handleScoreCardClick('belum_selesai', 'Senarai Syor Belum Selesai')}
             >
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg mb-2">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-slate-400">Belum Selesai</p>
-                  <p className="text-3xl font-bold text-white">{stats.belum_selesai}</p>
-                  <p className="text-xs text-slate-500 mt-1">Klik untuk lihat senarai</p>
-                </div>
+                <p className="text-xs sm:text-sm font-medium text-slate-400 mb-1">Belum</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">{stats.belum_selesai}</p>
               </div>
             </div>
           </div>
