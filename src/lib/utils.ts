@@ -46,7 +46,7 @@ export function capitalizeWords(str: string): string {
 
 export function getStatusText(status: 'belum_selesai' | 'dalam_tindakan' | 'selesai'): string {
   const statusMap = {
-    'belum_selesai': 'Belum Selesai',
+    'belum_selesai': 'Belum diambil tindakan',
     'dalam_tindakan': 'Dalam Tindakan', 
     'selesai': 'Selesai'
   }

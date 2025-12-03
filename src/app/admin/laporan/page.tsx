@@ -363,7 +363,7 @@ export default function DashboardLaporan() {
                 <Legend />
                 <Bar dataKey="selesai" stackId="a" fill="#10B981" name="Selesai" />
                 <Bar dataKey="dalam_tindakan" stackId="a" fill="#F59E0B" name="Dalam Tindakan" />
-                <Bar dataKey="belum_selesai" stackId="a" fill="#EF4444" name="Belum Selesai" />
+                <Bar dataKey="belum_selesai" stackId="a" fill="#EF4444" name="Belum diambil tindakan" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -394,7 +394,7 @@ export default function DashboardLaporan() {
                 <Legend />
                 <Bar dataKey="selesai" stackId="a" fill="#10B981" name="Selesai" />
                 <Bar dataKey="dalam_tindakan" stackId="a" fill="#F59E0B" name="Dalam Tindakan" />
-                <Bar dataKey="belum_selesai" stackId="a" fill="#EF4444" name="Belum Selesai" />
+                <Bar dataKey="belum_selesai" stackId="a" fill="#EF4444" name="Belum diambil tindakan" />
               </BarChart>
             </ResponsiveContainer>
           </div>

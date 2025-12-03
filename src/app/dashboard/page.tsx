@@ -511,10 +511,10 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Belum Selesai */}
+            {/* Belum diambil tindakan */}
             <div 
               className="cloudpeak-card p-3 sm:p-4 md:p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
-              onClick={() => handleScoreCardClick('belum_selesai', 'Senarai Syor Belum Selesai')}
+              onClick={() => handleScoreCardClick('belum_selesai', 'Senarai Syor Belum diambil tindakan')}
             >
               <div className="flex flex-col items-center text-center">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg mb-2">
@@ -522,7 +522,7 @@ export default function Dashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                 </div>
-                <p className="text-xs sm:text-sm font-medium text-slate-400 mb-1">Belum</p>
+                <p className="text-xs sm:text-sm font-medium text-slate-400 mb-1 leading-tight max-w-full break-words">Belum diambil tindakan</p>
                 <p className="text-2xl sm:text-3xl font-bold text-white">{stats.belum_selesai}</p>
               </div>
             </div>
