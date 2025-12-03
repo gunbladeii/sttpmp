@@ -41,9 +41,14 @@ function SyorModal({ isOpen, onClose, title, syorList, status }: SyorModalProps)
           ) : (
             <div className="space-y-4">
               {syorList.map((syor) => {
-                const sortedStatusTracking = syor.status_tracking
-                  ?.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-                const latestStatus = sortedStatusTracking?.[0]
+                const sortedStatusTracking = Array.isArray(syor.status_tracking)
+                  ? [...syor.status_tracking].sort((a, b) => {
+                      const dateA = a?.updated_at ? new Date(a.updated_at).getTime() : 0
+                      const dateB = b?.updated_at ? new Date(b.updated_at).getTime() : 0
+                      return dateB - dateA
+                    })
+                  : []
+                const latestStatus = sortedStatusTracking[0] || null
                 
                 // Calculate deadline urgency (same logic as syor page)
                 const today = new Date()
@@ -174,9 +179,14 @@ export default function Dashboard() {
       filteredSyor = allSyor
     } else {
       filteredSyor = allSyor.filter(syor => {
-        const sortedStatusTracking = syor.status_tracking
-          ?.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-        const latestStatus = sortedStatusTracking?.[0]
+        const sortedStatusTracking = Array.isArray(syor.status_tracking)
+          ? [...syor.status_tracking].sort((a, b) => {
+              const dateA = a?.updated_at ? new Date(a.updated_at).getTime() : 0
+              const dateB = b?.updated_at ? new Date(b.updated_at).getTime() : 0
+              return dateB - dateA
+            })
+          : []
+        const latestStatus = sortedStatusTracking[0] || null
         const statusType = latestStatus?.status || 'belum_selesai'
         return statusType === status
       })
@@ -305,10 +315,15 @@ export default function Dashboard() {
         // Calculate stats from each syor's latest status
         allSyorData?.forEach((syor) => {
           // Sort status_tracking by updated_at descending to get latest status
-          const sortedStatusTracking = syor.status_tracking
-            ?.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+          const sortedStatusTracking = Array.isArray(syor.status_tracking)
+            ? [...syor.status_tracking].sort((a, b) => {
+                const dateA = a?.updated_at ? new Date(a.updated_at).getTime() : 0
+                const dateB = b?.updated_at ? new Date(b.updated_at).getTime() : 0
+                return dateB - dateA
+              })
+            : []
           
-          const latestStatus = sortedStatusTracking?.[0]
+          const latestStatus = sortedStatusTracking[0] || null
           const status = latestStatus?.status || 'belum_selesai'
           
           // Count latest status for this syor
@@ -562,9 +577,14 @@ export default function Dashboard() {
                 <div className="space-y-4">
                   {recentSyor.slice(0, 5).map((syor) => {
                     // Sort status_tracking by updated_at descending to get the latest status
-                    const sortedStatusTracking = syor.status_tracking
-                      ?.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-                    const latestStatus = sortedStatusTracking?.[0]
+                    const sortedStatusTracking = Array.isArray(syor.status_tracking)
+                      ? [...syor.status_tracking].sort((a, b) => {
+                          const dateA = a?.updated_at ? new Date(a.updated_at).getTime() : 0
+                          const dateB = b?.updated_at ? new Date(b.updated_at).getTime() : 0
+                          return dateB - dateA
+                        })
+                      : []
+                    const latestStatus = sortedStatusTracking[0] || null
                     const statusType = latestStatus?.status || 'belum_selesai'
                     
                     // Calculate deadline urgency (same logic as syor page)
