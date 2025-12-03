@@ -13,23 +13,26 @@ export default function BrandLogo({
 }: BrandLogoProps) {
   const variants = {
     hero: {
-      logoSize: { width: 120, height: 60 },
-      logoClass: "h-16 sm:h-20 w-auto mb-4 sm:mb-6",
-      titleClass: "text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-blue-600 tracking-tight leading-none mb-4 drop-shadow-2xl px-4",
+      jnLogoSize: { width: 160, height: 80 },
+      jnLogoClass: "h-20 sm:h-24 md:h-28 w-auto mb-4 sm:mb-6",
+      strikeLogoSize: { width: 500, height: 150 },
+      strikeLogoClass: "h-24 sm:h-32 md:h-40 w-auto mb-4 sm:mb-6",
       subtitleClass: "text-lg sm:text-xl md:text-2xl text-slate-200 mb-4 font-light px-4",
       showGradientLine: true
     },
     header: {
-      logoSize: { width: 80, height: 40 },
-      logoClass: "h-12 w-auto",
-      titleClass: "text-2xl font-bold text-white",
+      jnLogoSize: { width: 80, height: 40 },
+      jnLogoClass: "h-12 w-auto",
+      strikeLogoSize: { width: 180, height: 54 },
+      strikeLogoClass: "h-10 w-auto",
       subtitleClass: "text-slate-300",
       showGradientLine: false
     },
     page: {
-      logoSize: { width: 150, height: 75 },
-      logoClass: "h-20 w-auto mb-6",
-      titleClass: "text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-blue-600 tracking-tight leading-none mb-2",
+      jnLogoSize: { width: 150, height: 75 },
+      jnLogoClass: "h-20 w-auto mb-6",
+      strikeLogoSize: { width: 300, height: 90 },
+      strikeLogoClass: "h-16 w-auto mb-4",
       subtitleClass: "text-lg text-slate-200 font-medium",
       showGradientLine: true
     }
@@ -44,21 +47,26 @@ export default function BrandLogo({
           <Image
             src="/logoJN.svg"
             alt="Jabatan Negeri Logo"
-            width={config.logoSize.width}
-            height={config.logoSize.height}
-            className={config.logoClass}
+            width={config.jnLogoSize.width}
+            height={config.jnLogoSize.height}
+            className={config.jnLogoClass}
           />
         </div>
-        <div className="mb-8">
-          <h1 className={config.titleClass}>
-            STRiKe
-          </h1>
-          {config.showGradientLine && (
-            <div className="flex justify-center">
-              <div className="h-1 w-32 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full shadow-lg"></div>
-            </div>
-          )}
+        <div className="mb-8 flex justify-center">
+          <Image
+            src="/LogoStrike.png"
+            alt="STRiKe Logo"
+            width={config.strikeLogoSize.width}
+            height={config.strikeLogoSize.height}
+            className={config.strikeLogoClass}
+            priority
+          />
         </div>
+        {config.showGradientLine && (
+          <div className="flex justify-center mb-4">
+            <div className="h-1 w-32 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full shadow-lg"></div>
+          </div>
+        )}
         {showSubtitle && (
           <p className={config.subtitleClass}>
             Dashboard Status Tindakan Terhadap Perakuan Menteri Pendidkan
@@ -70,38 +78,47 @@ export default function BrandLogo({
 
   if (variant === 'header') {
     return (
-      <div className={`flex items-center space-x-4 ${className}`}>
+      <div className={`flex items-center space-x-3 ${className}`}>
         <Image
           src="/logoJN.svg"
           alt="Jabatan Negeri Logo"
-          width={config.logoSize.width}
-          height={config.logoSize.height}
-          className={config.logoClass}
+          width={config.jnLogoSize.width}
+          height={config.jnLogoSize.height}
+          className={config.jnLogoClass}
         />
-        <div>
-          <h1 className={config.titleClass}>STRiKe</h1>
-          {showSubtitle && (
-            <p className={config.subtitleClass}>Kementerian Pendidikan Malaysia</p>
-          )}
-        </div>
+        <Image
+          src="/LogoStrike.png"
+          alt="STRiKe Logo"
+          width={config.strikeLogoSize.width}
+          height={config.strikeLogoSize.height}
+          className={config.strikeLogoClass}
+          priority
+        />
       </div>
     )
   }
 
   return (
     <div className={`text-center ${className}`}>
-      <div className="flex justify-center">
+      <div className="flex justify-center mb-4">
         <Image
           src="/logoJN.svg"
           alt="Jabatan Negeri Logo"
-          width={config.logoSize.width}
-          height={config.logoSize.height}
-          className={config.logoClass}
+          width={config.jnLogoSize.width}
+          height={config.jnLogoSize.height}
+          className={config.jnLogoClass}
         />
       </div>
-      <h2 className={config.titleClass}>
-        STRiKe
-      </h2>
+      <div className="flex justify-center mb-4">
+        <Image
+          src="/LogoStrike.png"
+          alt="STRiKe Logo"
+          width={config.strikeLogoSize.width}
+          height={config.strikeLogoSize.height}
+          className={config.strikeLogoClass}
+          priority
+        />
+      </div>
       {config.showGradientLine && (
         <div className="flex justify-center mb-4">
           <div className="h-0.5 w-16 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full"></div>
