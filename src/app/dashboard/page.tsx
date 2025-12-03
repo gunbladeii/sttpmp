@@ -398,7 +398,7 @@ export default function Dashboard() {
       <DashboardHeader />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold cloudpeak-title mb-3">Dashboard STTPMP</h1>
+          <h1 className="text-4xl font-bold cloudpeak-title mb-3">Dashboard STRiKe</h1>
           <div className="mt-2 space-y-1">
             <p className="text-slate-300 text-lg">Dashboard sistem pemantauan syor dan maklum balas syor</p>
             {user?.role === 'penyelaras_bahagian' && userDetails?.department && (

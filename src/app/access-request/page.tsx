@@ -128,7 +128,7 @@ export default function AccessRequestPage() {
               Langkah Seterusnya
             </h3>
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              Untuk mendapat capaian ke sistem STTPMP, klik butang di bawah untuk menghantar permohonan kepada admin sistem.
+              Untuk mendapat capaian ke sistem STRiKe, klik butang di bawah untuk menghantar permohonan kepada admin sistem.
             </p>
           </div>
 

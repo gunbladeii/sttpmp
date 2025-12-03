@@ -355,7 +355,7 @@ export default function AdminUsersPage() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="mb-8">
           <h1 className="cloudpeak-title">Pengurusan Pengguna</h1>
-          <p className="mt-3 text-slate-300 text-lg">Urus akaun pengguna sistem STTPMP</p>
+          <p className="mt-3 text-slate-300 text-lg">Urus akaun pengguna sistem STRiKe</p>
         </div>
 
         {/* Users Table */}

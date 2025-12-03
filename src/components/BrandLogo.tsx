@@ -51,7 +51,7 @@ export default function BrandLogo({
         </div>
         <div className="mb-8">
           <h1 className={config.titleClass}>
-            STTPMP
+            STRiKe
           </h1>
           {config.showGradientLine && (
             <div className="flex justify-center">
@@ -79,7 +79,7 @@ export default function BrandLogo({
           className={config.logoClass}
         />
         <div>
-          <h1 className={config.titleClass}>STTPMP</h1>
+          <h1 className={config.titleClass}>STRiKe</h1>
           {showSubtitle && (
             <p className={config.subtitleClass}>Kementerian Pendidikan Malaysia</p>
           )}
@@ -100,7 +100,7 @@ export default function BrandLogo({
         />
       </div>
       <h2 className={config.titleClass}>
-        STTPMP
+        STRiKe
       </h2>
       {config.showGradientLine && (
         <div className="flex justify-center mb-4">
