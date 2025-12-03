@@ -414,9 +414,9 @@ export default function Dashboard() {
     : 0
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
       <DashboardHeader />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-w-full overflow-x-hidden">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold cloudpeak-title mb-3">Dashboard STRiKe</h1>
           <div className="mt-2 space-y-1">
@@ -533,7 +533,7 @@ export default function Dashboard() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Kemajuan Keseluruhan */}
           <div className="lg:col-span-1">
-            <div className="cloudpeak-card p-6">
+            <div className="cloudpeak-card p-6 w-full">
               <h3 className="text-xl font-bold text-white mb-6">Kemajuan Keseluruhan</h3>
               <div className="text-center">
                 <div className="relative w-32 h-32 mx-auto mb-4">

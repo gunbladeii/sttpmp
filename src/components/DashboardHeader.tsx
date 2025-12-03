@@ -214,7 +214,7 @@ export default function DashboardHeader() {
 
       {/* Mobile Hamburger Menu Dropdown */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 mt-2 mx-4 cloudpeak-card border-t border-slate-600 z-50">
+        <div className="md:hidden absolute top-full left-0 right-0 mt-2 mx-4 cloudpeak-card border-t border-slate-600 z-[9999] shadow-2xl">
           <div className="px-4 py-3 space-y-1">
             {/* User Info Header */}
             {user && user.name && (
