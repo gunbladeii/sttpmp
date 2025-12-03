@@ -166,8 +166,8 @@ export function useNotifications() {
           setNotifications(prev => [newNotification, ...prev])
           setUnreadCount(prev => prev + 1)
           
-          // Show browser notification if permission granted
-          if (Notification.permission === 'granted') {
+          // Show browser notification if permission granted (check if Notification API exists)
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
             new Notification(newNotification.title, {
               body: newNotification.message,
               icon: '/logoJN.svg',
@@ -218,8 +218,8 @@ export function useNotifications() {
       )
       .subscribe()
 
-    // Request browser notification permission
-    if (Notification.permission === 'default') {
+    // Request browser notification permission (check if Notification API exists)
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission()
     }
 
