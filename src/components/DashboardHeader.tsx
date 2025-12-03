@@ -109,7 +109,7 @@ export default function DashboardHeader() {
           </div>
 
           {/* Desktop: Navigation Menu */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
             <Link href="/dashboard" className={getLinkClasses('/dashboard')}> 
               Dashboard
             </Link>
@@ -123,19 +123,34 @@ export default function DashboardHeader() {
             {user.role === 'admin' && (
               <>
                 <Link href="/admin/announcements" className={getLinkClasses('/admin/announcements', true)}>
-                  Pengumuman
+                  <div className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                    </svg>
+                    <span>Pengumuman</span>
+                  </div>
                 </Link>
                 <Link 
                   href="/admin" 
                   className={getLinkClasses('/admin', true)}
                 >
-                  👥 Pengguna
+                  <div className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span>Pengguna</span>
+                  </div>
                 </Link>
                 <Link 
                   href="/admin/laporan" 
                   className={getLinkClasses('/admin/laporan')}
                 >
-                  📊 Dashboard Laporan
+                  <div className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span className="whitespace-nowrap">Dashboard Laporan</span>
+                  </div>
                 </Link>
               </>
             )}
@@ -144,9 +159,12 @@ export default function DashboardHeader() {
             {user.role === 'peneraju_pemeriksaan' && (
               <Link 
                 href="/create-syor" 
-                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 transition-all transform hover:scale-105 shadow-lg"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 transition-all transform hover:scale-105 shadow-lg"
               >
-                ➕ Syor Baharu
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Syor Baharu
               </Link>
             )}
           </nav>
@@ -204,9 +222,12 @@ export default function DashboardHeader() {
             {/* Logout Button */}
             <button
               onClick={handleLogout}
-              className="bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105"
+              className="flex items-center gap-2 bg-slate-600 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105"
             >
-              🚪 Logout
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Logout
             </button>
           </div>
         </div>
