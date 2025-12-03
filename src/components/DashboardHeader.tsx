@@ -108,13 +108,6 @@ export default function DashboardHeader() {
             </Link>
           </div>
 
-          {/* Desktop: Logo */}
-          <div className="hidden md:flex items-center">
-            <Link href="/dashboard" className="flex items-center">
-              <BrandLogo variant="header" showSubtitle={false} />
-            </Link>
-          </div>
-
           {/* Desktop: Navigation Menu */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="/dashboard" className={getLinkClasses('/dashboard')}> 

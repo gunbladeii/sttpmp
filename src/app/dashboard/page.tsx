@@ -513,8 +513,6 @@ export default function Dashboard() {
 
             {/* Belum Selesai */}
             <div 
-            {/* Belum Selesai */}
-            <div 
               className="cloudpeak-card p-3 sm:p-4 md:p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
               onClick={() => handleScoreCardClick('belum_selesai', 'Senarai Syor Belum Selesai')}
             >
