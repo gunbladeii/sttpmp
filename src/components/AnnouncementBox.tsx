@@ -89,12 +89,12 @@ const AnnouncementBox: React.FC = () => {
               return (
               <div 
                 key={a.id} 
-                className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 p-4 md:p-5 h-64"
+                className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 p-4 md:p-5 min-h-[16rem] md:h-64"
               >
-                <div className="flex gap-4 h-full">
-                  {/* Image Section - Fixed size */}
+                <div className="flex flex-col sm:flex-row gap-4 h-full">
+                  {/* Image Section - Responsive size */}
                   {imageUrl && (
-                    <div className="w-48 h-full relative flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                    <div className="w-full sm:w-40 md:w-48 h-48 sm:h-full relative flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                       <img
                         src={imageUrl}
                         alt={a.title}

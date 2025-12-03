@@ -182,7 +182,7 @@ export default function SyorList() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
-        <div className="max-w-md mx-auto cloudpeak-card p-8">
+        <div className="max-w-md mx-auto cloudpeak-card p-6 sm:p-8">
           <div className="text-center">
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,14 +206,14 @@ export default function SyorList() {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
       <DashboardHeader />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-4xl font-bold cloudpeak-title mb-3">Pengurusan Syor</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold cloudpeak-title mb-3">Pengurusan Syor</h1>
               <div className="mt-2 space-y-2">
-                <p className="text-slate-300 text-lg">Urus saranan dan maklum balas</p>
+                <p className="text-slate-300 text-sm sm:text-base md:text-lg">Urus saranan dan maklum balas</p>
                 {user?.role === 'penyelaras_bahagian' && userDetails?.department && (
                   <p className="text-sm text-blue-400 font-medium bg-blue-500/10 px-3 py-1 rounded-full inline-block">
                     📋 Melihat syor untuk Bahagian: <span className="font-bold">{userDetails.department.name}</span>
@@ -342,7 +342,7 @@ export default function SyorList() {
                 return (
                   <div 
                     key={item.id} 
-                    className={`p-8 transition-all ${
+                    className={`p-4 sm:p-6 md:p-8 transition-all ${
                       isOverdue ? 'bg-red-500/10 border-l-4 border-red-500 hover:bg-red-500/20' :
                       isUrgent ? 'bg-orange-500/10 border-l-4 border-orange-500 hover:bg-orange-500/20' :
                       isApproaching ? 'bg-yellow-500/5 border-l-4 border-yellow-500/50 hover:bg-yellow-500/10' :
@@ -351,8 +351,8 @@ export default function SyorList() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-4">
-                          <h3 className="text-xl font-bold text-white">{item.title}</h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
+                          <h3 className="text-lg sm:text-xl font-bold text-white">{item.title}</h3>
                           {isOverdue && (
                             <span className="px-3 py-1.5 bg-red-500/30 text-red-200 text-xs font-bold rounded-full border-2 border-red-500 animate-pulse shadow-lg shadow-red-500/50">
                               🔴 TERTUNGGAK ({Math.abs(daysUntilDeadline)} hari lepas)

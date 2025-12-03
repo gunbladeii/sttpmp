@@ -14,9 +14,9 @@ export default function BrandLogo({
   const variants = {
     hero: {
       logoSize: { width: 120, height: 60 },
-      logoClass: "h-20 w-auto mb-6",
-      titleClass: "text-8xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-blue-600 tracking-tight leading-none mb-4 drop-shadow-2xl",
-      subtitleClass: "text-2xl text-slate-200 mb-4 font-light",
+      logoClass: "h-16 sm:h-20 w-auto mb-4 sm:mb-6",
+      titleClass: "text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-blue-600 tracking-tight leading-none mb-4 drop-shadow-2xl px-4",
+      subtitleClass: "text-lg sm:text-xl md:text-2xl text-slate-200 mb-4 font-light px-4",
       showGradientLine: true
     },
     header: {

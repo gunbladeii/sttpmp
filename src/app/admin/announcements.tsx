@@ -107,8 +107,8 @@ export default function AdminAnnouncementsPage() {
 
   return (
     <>
-      <div className="max-w-6xl mx-auto py-10 px-6">
-        <h2 className="text-3xl font-bold mb-8 text-white">Pengurusan Hebahan / Pengumuman</h2>
+      <div className="max-w-6xl mx-auto py-6 sm:py-8 md:py-10 px-4 sm:px-6">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-white">Pengurusan Hebahan / Pengumuman</h2>
         {error && <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">{error}</div>}
         
         {/* Create Button */}
@@ -116,7 +116,7 @@ export default function AdminAnnouncementsPage() {
           <div className="mb-8">
             <button
               onClick={() => setShowCreateForm(true)}
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-3 text-lg"
+              className="px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2 sm:gap-3 text-base sm:text-lg"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

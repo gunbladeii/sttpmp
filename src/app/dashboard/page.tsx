@@ -24,10 +24,10 @@ function SyorModal({ isOpen, onClose, title, syorList, status }: SyorModalProps)
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">{title}</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-slate-800 rounded-lg max-w-4xl w-full max-h-[90vh] sm:max-h-[80vh] overflow-hidden">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-700 flex items-center justify-between">
+          <h2 className="text-lg sm:text-xl font-bold text-white">{title}</h2>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-white text-2xl"
@@ -35,7 +35,7 @@ function SyorModal({ isOpen, onClose, title, syorList, status }: SyorModalProps)
             ×
           </button>
         </div>
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[70vh] sm:max-h-[60vh]">
           {syorList.length === 0 ? (
             <p className="text-slate-400 text-center py-8">Tiada syor dengan status ini</p>
           ) : (
@@ -397,10 +397,10 @@ export default function Dashboard() {
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%)' }}>
       <DashboardHeader />
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold cloudpeak-title mb-3">Dashboard STRiKe</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold cloudpeak-title mb-3">Dashboard STRiKe</h1>
           <div className="mt-2 space-y-1">
-            <p className="text-slate-300 text-lg">Dashboard sistem pemantauan syor dan maklum balas syor</p>
+            <p className="text-slate-300 text-sm sm:text-base md:text-lg">Dashboard sistem pemantauan syor dan maklum balas syor</p>
             {user?.role === 'penyelaras_bahagian' && userDetails?.department && (
               <p className="text-sm text-blue-400 font-medium bg-blue-500/10 px-3 py-1 rounded-full inline-block">
                 📋 Dashboard untuk Bahagian: <span className="font-bold">{userDetails.department.name}</span>
@@ -442,21 +442,21 @@ export default function Dashboard() {
 
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <div 
-              className="cloudpeak-card p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
+              className="cloudpeak-card p-4 sm:p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
               onClick={() => handleScoreCardClick('all', 'Semua Syor')}
             >
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-slate-400">Total Syor</p>
-                  <p className="text-3xl font-bold text-white">{stats.total_syor}</p>
-                  <p className="text-xs text-slate-500 mt-1">Klik untuk lihat semua</p>
+                <div className="ml-3 sm:ml-4">
+                  <p className="text-xs sm:text-sm font-medium text-slate-400">Total Syor</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-white">{stats.total_syor}</p>
+                  <p className="text-xs text-slate-500 mt-1 hidden sm:block">Klik untuk lihat semua</p>
                 </div>
               </div>
             </div>

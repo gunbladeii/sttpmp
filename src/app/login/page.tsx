@@ -128,7 +128,7 @@ export default function LoginPage() {
         }}
       />
 
-      <div className="min-h-screen flex items-center justify-center py-12 px-6 relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 relative overflow-hidden">
         {/* Background Image with Dark Overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -154,7 +154,7 @@ export default function LoginPage() {
           </p>
         </div>
         
-        <div className="cloudpeak-card p-8">
+        <div className="cloudpeak-card p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm">
@@ -201,7 +201,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-slate-600 bg-slate-800/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-slate-600 bg-slate-800/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
                 placeholder="nama@moe.gov.my"
               />
             </div>
@@ -220,7 +220,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 pr-12 border border-slate-600 bg-slate-800/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-12 border border-slate-600 bg-slate-800/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm sm:text-base"
                   placeholder="Masukkan password"
                 />
                 <button
@@ -249,7 +249,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isSubmitting || loading}
-                className="cloudpeak-button w-full py-4 text-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="cloudpeak-button w-full py-3 sm:py-4 text-base sm:text-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center">

@@ -323,11 +323,11 @@ export default function CreateSyorPage() {
         </div>
 
         <div className="cloudpeak-card">
-          <div className="px-8 py-6 border-b border-slate-700 border-opacity-30">
+          <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 border-b border-slate-700 border-opacity-30">
             <h2 className="text-xl font-medium text-white">Maklumat Syor</h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-8 space-y-8">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
             {error && (
               <div className="bg-red-500 bg-opacity-20 border border-red-500 border-opacity-30 text-red-300 px-6 py-4 rounded-lg">
                 <p className="text-sm">{error}</p>
@@ -549,7 +549,7 @@ export default function CreateSyorPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="cloudpeak-button px-8 py-3 rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="cloudpeak-button px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base"
               >
                 {loading ? (
                   <div className="flex items-center">
