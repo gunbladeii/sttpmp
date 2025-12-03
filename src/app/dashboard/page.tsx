@@ -355,7 +355,10 @@ export default function Dashboard() {
         setAllSyor(allSyorData || []) // Store all syor for modal filtering
       } catch (err) {
         console.error('Dashboard data fetch error:', err)
-        setError(err instanceof Error ? err.message : 'Unknown error occurred')
+        const errorMessage = err instanceof Error 
+          ? `${err.message}\n\nStack: ${err.stack?.substring(0, 200)}` 
+          : 'Unknown error occurred'
+        setError(errorMessage)
       } finally {
         setLoading(false)
       }
@@ -391,7 +394,9 @@ export default function Dashboard() {
               </svg>
             </div>
             <h3 className="text-xl font-bold text-white mb-3">Ralat Memuat Papan Pemuka</h3>
-            <p className="text-slate-300 mb-6">Ralat: {error}</p>
+            <div className="text-left bg-slate-900 rounded p-4 mb-4">
+              <p className="text-red-300 font-mono text-xs whitespace-pre-wrap break-all">{error}</p>
+            </div>
             <Link 
               href="/" 
               className="cloudpeak-button px-6 py-3 rounded-lg transition-all"
