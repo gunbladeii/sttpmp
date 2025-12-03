@@ -108,6 +108,7 @@ export default function DashboardHeader() {
             
             {/* User Info - Responsive, Truncated */}
             {/* Google-style user avatar + badge */}
+            {user && user.name && (
             <div className="flex items-center gap-2">
               {/* User Initials Avatar */}
               <span
@@ -148,6 +149,7 @@ export default function DashboardHeader() {
                  'Pemantau'}
               </span>
             </div>
+            )}
 
             {/* Logout Button */}
             <button
