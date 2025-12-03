@@ -29,6 +29,11 @@ const AnnouncementBox: React.FC = () => {
 
   // Strip HTML tags for preview
   const stripHtml = (html: string) => {
+    if (typeof window === 'undefined') {
+      // Server-side: use regex fallback
+      return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+    }
+    // Client-side: use DOM parser
     const tmp = document.createElement('div');
     tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || '';
