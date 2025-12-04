@@ -151,7 +151,7 @@ export default function AdminUsersPage() {
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    setUsers(data || [])
+    setUsers((data as unknown as User[]) || [])
   }
 
   const fetchDepartments = async () => {
