@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadFileToLocalStorage, validatePDFFile, deleteFileFromLocalStorage } from '@/lib/googleDrive';
 import { createServerSupabaseClient } from '@/lib/supabase';
+import { z } from 'zod';
+import { sanitizeString, uuidSchema, fileSchema, checkRateLimit } from '@/lib/input-validation';
 
 import { createRouteHandlerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
@@ -19,22 +21,65 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limiting per user
+    const rateLimit = checkRateLimit(`upload:${user.id}`, 10, 60000) // 10 uploads per minute
+    
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ 
+        error: 'Terlalu banyak upload. Sila cuba lagi sebentar.' 
+      }, { status: 429 })
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const syorId = formData.get('syorId') as string;
+    const syorIdRaw = formData.get('syorId') as string;
 
-    if (!file || !syorId) {
+    if (!file || !syorIdRaw) {
       return NextResponse.json({ error: 'File and syor ID required' }, { status: 400 });
     }
 
-    // Validate PDF file
+    // Validate and sanitize syorId
+    const syorIdValidation = uuidSchema.safeParse(sanitizeString(syorIdRaw))
+    if (!syorIdValidation.success) {
+      return NextResponse.json({ error: 'Syor ID tidak sah' }, { status: 400 });
+    }
+    const syorId = syorIdValidation.data
+
+    // Validate file metadata
+    const fileValidation = fileSchema.safeParse({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    })
+    
+    if (!fileValidation.success) {
+      return NextResponse.json({ 
+        error: fileValidation.error.errors[0]?.message || 'Fail tidak sah' 
+      }, { status: 400 });
+    }
+
+    // Additional PDF file validation
     const validation = validatePDFFile(file);
     if (!validation.isValid) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
+    // Verify user has permission to upload to this syor
+    const { data: syorData, error: syorError } = await supabase
+      .from('syor')
+      .select('id')
+      .eq('id', syorId)
+      .single()
+
+    if (syorError || !syorData) {
+      return NextResponse.json({ error: 'Syor tidak dijumpai atau tiada akses' }, { status: 403 });
+    }
+
+    // Sanitize filename
+    const sanitizedFileName = sanitizeString(file.name).replace(/[^a-zA-Z0-9._-]/g, '_')
+
     // Upload to local storage (or your chosen storage solution)
-    const uploadResult = await uploadFileToLocalStorage(file, file.name, syorId);
+    const uploadResult = await uploadFileToLocalStorage(file, sanitizedFileName, syorId);
 
     // Save document info to database, associated with the authenticated user
     const { data: docData, error: docError } = await supabase
@@ -42,7 +87,7 @@ export async function POST(request: NextRequest) {
       .insert([
         {
           syor_id: syorId,
-          file_name: file.name,
+          file_name: sanitizedFileName,
           file_size: file.size,
           file_type: file.type,
           google_drive_id: uploadResult.id,
@@ -92,12 +137,28 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const documentId = searchParams.get('documentId');
+    // Rate limiting per user
+    const rateLimit = checkRateLimit(`delete:${user.id}`, 20, 60000) // 20 deletes per minute
+    
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ 
+        error: 'Terlalu banyak permintaan. Sila cuba lagi sebentar.' 
+      }, { status: 429 })
+    }
 
-    if (!documentId) {
+    const { searchParams } = new URL(request.url);
+    const documentIdRaw = searchParams.get('documentId');
+
+    if (!documentIdRaw) {
       return NextResponse.json({ error: 'Document ID required' }, { status: 400 });
     }
+
+    // Validate and sanitize documentId
+    const documentIdValidation = uuidSchema.safeParse(sanitizeString(documentIdRaw))
+    if (!documentIdValidation.success) {
+      return NextResponse.json({ error: 'Document ID tidak sah' }, { status: 400 });
+    }
+    const documentId = documentIdValidation.data
 
     // Get document info to verify ownership
     const { data: docData, error: docError } = await supabase

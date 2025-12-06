@@ -3,6 +3,32 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { supabase } from '@/lib/supabase'
 import { sendApprovalEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
+import { z } from 'zod'
+import { sanitizeString, emailSchema, passwordSchema, nameSchema, roleSchema, uuidSchema, checkRateLimit } from '@/lib/input-validation'
+
+// Admin create user schema
+const createUserSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: passwordSchema,
+  role: roleSchema,
+  department_id: z.string().uuid().optional().nullable(),
+  jpn_id: z.string().uuid().optional().nullable(),
+  sector: z.string().min(1).max(100).optional().nullable(),
+}).refine((data) => {
+  if (data.role === 'penyelaras_bahagian' && !data.department_id) {
+    return false
+  }
+  if (data.role === 'penyelaras_jpn' && !data.jpn_id) {
+    return false
+  }
+  if (data.role === 'peneraju_pemeriksaan' && !data.sector) {
+    return false
+  }
+  return true
+}, {
+  message: 'Field yang diperlukan untuk peranan ini tidak lengkap'
+})
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,42 +40,44 @@ export async function POST(req: NextRequest) {
 
     const { data: requester } = await supabase
       .from('users')
-      .select('role')
-      .eq('email', userEmail)
+      .select('role, id')
+      .eq('email', sanitizeString(userEmail.toLowerCase()))
       .single()
 
     if (!requester || requester.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 403 })
     }
 
+    // Rate limiting per admin
+    const rateLimit = checkRateLimit(`admin-create:${requester.id}`, 20, 60000)
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ 
+        error: 'Terlalu banyak permintaan. Sila cuba lagi sebentar.' 
+      }, { status: 429 })
+    }
+
     const body = await req.json()
-    const { name, email, password, role, department_id, jpn_id, sector } = body
+    
+    // Sanitize all inputs
+    const sanitizedBody = {
+      name: typeof body.name === 'string' ? sanitizeString(body.name) : body.name,
+      email: typeof body.email === 'string' ? sanitizeString(body.email.toLowerCase()) : body.email,
+      password: body.password,
+      role: body.role,
+      department_id: typeof body.department_id === 'string' && body.department_id.trim() !== '' ? body.department_id : null,
+      jpn_id: typeof body.jpn_id === 'string' && body.jpn_id.trim() !== '' ? body.jpn_id : null,
+      sector: typeof body.sector === 'string' && body.sector.trim() !== '' ? sanitizeString(body.sector) : null,
+    }
 
-    // Validate required fields
-    if (!name || !email || !password || !role) {
+    // Validate with schema
+    const validation = createUserSchema.safeParse(sanitizedBody)
+    if (!validation.success) {
       return NextResponse.json({ 
-        error: 'Nama, email, kata laluan, dan peranan diperlukan' 
+        error: validation.error.errors[0]?.message || 'Data tidak sah' 
       }, { status: 400 })
     }
 
-    // Validate role-specific requirements
-    if (role === 'penyelaras_bahagian' && !department_id) {
-      return NextResponse.json({ 
-        error: 'Bahagian diperlukan untuk Penyelaras Bahagian' 
-      }, { status: 400 })
-    }
-
-    if (role === 'penyelaras_jpn' && !jpn_id) {
-      return NextResponse.json({ 
-        error: 'JPN diperlukan untuk Penyelaras JPN' 
-      }, { status: 400 })
-    }
-
-    if (role === 'peneraju_pemeriksaan' && !sector) {
-      return NextResponse.json({ 
-        error: 'Sektor diperlukan untuk Peneraju Pemeriksaan' 
-      }, { status: 400 })
-    }
+    const { name, email, password, role, department_id, jpn_id, sector } = validation.data
 
     // Check if user already exists
     const { data: existingUser } = await supabase

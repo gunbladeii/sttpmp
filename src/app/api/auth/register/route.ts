@@ -2,27 +2,60 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { sendRegistrationPendingEmail, sendAdminNewRegistrationEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
+import { z } from 'zod'
+import { sanitizeString, emailSchema, passwordSchema, nameSchema, roleSchema, checkRateLimit } from '@/lib/input-validation'
+
+// Registration schema with strict validation
+const registrationSchema = z.object({
+  email: emailSchema,
+  name: nameSchema,
+  password: passwordSchema,
+  confirmPassword: z.string().min(8),
+  department_id: z.string().uuid().optional().nullable(),
+  jpn_id: z.string().uuid().optional().nullable(),
+  requestedRole: roleSchema.optional().nullable(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Password dan pengesahan password tidak sama',
+  path: ['confirmPassword'],
+})
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, name, password, confirmPassword, department_id, jpn_id, requestedRole } = await request.json()
-
-    // Validation
-    if (!email || !name || !password || !confirmPassword) {
-      return NextResponse.json({ error: 'Semua field diperlukan' }, { status: 400 })
+    // Rate limiting by IP
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    const rateLimit = checkRateLimit(`register:${ip}`, 5, 300000) // 5 requests per 5 minutes
+    
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ 
+        error: 'Terlalu banyak percubaan. Sila cuba lagi dalam beberapa minit.' 
+      }, { status: 429 })
     }
 
-    if (!email.includes('@moe.gov.my')) {
-      return NextResponse.json({ error: 'Hanya email dengan domain @moe.gov.my yang dibenarkan' }, { status: 400 })
+    // Parse and validate request body
+    const body = await request.json()
+    
+    // Sanitize all string inputs
+    const sanitizedBody = {
+      email: typeof body.email === 'string' ? sanitizeString(body.email.toLowerCase()) : body.email,
+      name: typeof body.name === 'string' ? sanitizeString(body.name) : body.name,
+      password: body.password,
+      confirmPassword: body.confirmPassword,
+      department_id: typeof body.department_id === 'string' && body.department_id.trim() !== '' ? body.department_id : null,
+      jpn_id: typeof body.jpn_id === 'string' && body.jpn_id.trim() !== '' ? body.jpn_id : null,
+      requestedRole: body.requestedRole || null,
     }
 
-    if (password !== confirmPassword) {
-      return NextResponse.json({ error: 'Password dan pengesahan password tidak sama' }, { status: 400 })
+    // Validate with Zod schema
+    const validation = registrationSchema.safeParse(sanitizedBody)
+    
+    if (!validation.success) {
+      const firstError = validation.error.errors[0]
+      return NextResponse.json({ 
+        error: firstError?.message || 'Data tidak sah' 
+      }, { status: 400 })
     }
 
-    if (password.length < 8) {
-      return NextResponse.json({ error: 'Password mesti sekurang-kurangnya 8 aksara' }, { status: 400 })
-    }
+    const { email, name, password, department_id, jpn_id, requestedRole } = validation.data
 
     // Check if email already exists in users table
     const { data: existingUser } = await supabaseAdmin

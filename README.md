@@ -2,6 +2,18 @@
 
 **A comprehensive government tracking system for monitoring feedback and recommendations from education departments and state education departments (JPN).**
 
+## 🔒 Security Status
+
+**✅ PRODUCTION READY - Security Patched**
+
+- **CVE-2025-55182 Mitigated** - Critical React Server Components vulnerability fixed
+- **Next.js**: 15.5.7 (Latest security patch)
+- **React**: 19.1.2 (Security hardened)
+- **Security Audit**: 0 vulnerabilities
+- **Last Security Update**: December 7, 2025
+
+See [SECURITY_UPGRADE_CVE-2025-55182.md](SECURITY_UPGRADE_CVE-2025-55182.md) for full security details.
+
 ## 🏛️ About STTPMP
 
 STTPMP is designed to streamline the management and tracking of ministerial approval recommendations from various education departments and state education departments (JPN). The system features a real-time traffic light monitoring system to track the completion status of recommendations.
@@ -16,22 +28,25 @@ STTPMP is designed to streamline the management and tracking of ministerial appr
   - 🟢 Selesai (1) - Completed
 - **Multi-device Access** - Responsive design for all devices
 - **Role-based Access Control** - Different permission levels
+- **🛡️ Enhanced Security** - Input validation, rate limiting, XSS protection
 
 ### Advanced Features
 - **Dashboard Analytics** - Performance metrics and insights
 - **Notification System** - Real-time alerts and deadline reminders
-- **Document Management** - File upload and attachment support
+- **Document Management** - File upload and attachment support (PDF, max 10MB)
 - **Audit Trail** - Complete activity logging
 - **Report Generation** - Export status reports
 - **Deadline Management** - Due date tracking and alerts
 
 ## 🚀 Tech Stack
 
-- **Frontend**: Next.js 15 + TypeScript + Tailwind CSS
+- **Frontend**: Next.js 15.5.7 + TypeScript + Tailwind CSS
 - **Backend**: Supabase (PostgreSQL + Real-time)
 - **Deployment**: Vercel
 - **Authentication**: Supabase Auth
 - **Real-time**: Supabase Realtime subscriptions
+- **Validation**: Zod schema validation
+- **Security**: Enhanced headers, rate limiting, input sanitization
 
 ## 📊 Database Schema
 
