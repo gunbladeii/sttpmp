@@ -69,7 +69,7 @@ export default function BrandLogo({
         )}
         {showSubtitle && (
           <p className={config.subtitleClass}>
-            Dashboard Status Tindakan Terhadap Perakuan Menteri Pendidkan
+            Dashboard Status Tindakan Terhadap Perakuan Menteri Pendidikan
           </p>
         )}
       </div>
@@ -126,7 +126,7 @@ export default function BrandLogo({
       )}
       {showSubtitle && (
         <p className={config.subtitleClass}>
-          Dashboard Status Tindakan Terhadap Perakuan Menteri Pendidkan
+          Dashboard Status Tindakan Terhadap Perakuan Menteri Pendidikan
         </p>
       )}
     </div>

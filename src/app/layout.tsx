@@ -23,7 +23,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "STRiKe - Dashboard Status Tindakan Terhadap Perakuan Menteri Pendidkan",
+  title: "STRiKe - Dashboard Status Tindakan Terhadap Perakuan Menteri Pendidikan",
   description: "Government system for tracking ministerial approval recommendations",
 }
 
