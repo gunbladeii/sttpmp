@@ -296,6 +296,31 @@ export default function SyorDetailsPage() {
     setSuccess('')
 
     try {
+      console.log('🔄 Starting save process...', { user: user.email, role: user.role });
+
+      // Validate required fields
+      if (!formData.title?.trim()) {
+        throw new Error('Tajuk syor tidak boleh kosong');
+      }
+      if (!formData.description?.trim()) {
+        throw new Error('Huraian syor tidak boleh kosong');
+      }
+      if (!formData.priority) {
+        throw new Error('Prioriti mesti dipilih');
+      }
+      if (!formData.pemeriksaan_type) {
+        throw new Error('Nama pemeriksaan mesti dipilih');
+      }
+      if (!formData.due_date) {
+        throw new Error('Tarikh akhir tindakan mesti diisi');
+      }
+      if (!formData.response_deadline) {
+        throw new Error('Tarikh maklum balas mesti diisi');
+      }
+      if (!formData.assigned_to_department && !formData.assigned_to_jpn) {
+        throw new Error('Syor mesti diassign kepada Bahagian atau JPN');
+      }
+
       // Check permissions
       const canEdit = user.role === 'admin' || user.role === 'peneraju_pemeriksaan' || 
                      (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
@@ -305,29 +330,50 @@ export default function SyorDetailsPage() {
         throw new Error('Anda tidak mempunyai kebenaran untuk mengedit syor ini')
       }
 
+      console.log('✅ Permission check passed');
+
       // Date validation
       const today = new Date()
+      today.setHours(0, 0, 0, 0) // Reset to start of day for fair comparison
+      
       const dueDate = new Date(formData.due_date)
       const responseDeadline = new Date(formData.response_deadline)
-      const isDueDateOverdue = dueDate < today
-      const isResponseDeadlineOverdue = responseDeadline < today
+      dueDate.setHours(0, 0, 0, 0)
+      responseDeadline.setHours(0, 0, 0, 0)
 
-      // Only block non-admins if overdue
-      if ((isDueDateOverdue || isResponseDeadlineOverdue) && user.role !== 'admin') {
-        setError('Tarikh akhir tindakan atau tarikh maklum balas sudah lepas. Sila hubungi admin untuk ubah tarikh.');
+      // Validate response_deadline <= due_date
+      if (responseDeadline > dueDate) {
+        setError('Tarikh maklum balas mesti sebelum atau sama dengan tarikh akhir tindakan.');
         setSaving(false);
         return;
       }
 
-      // For admin, allow save if both dates are in the future
-      if (user.role === 'admin' && (isDueDateOverdue || isResponseDeadlineOverdue)) {
-        setError('Admin boleh ubah tarikh, tetapi pastikan kedua-dua tarikh adalah selepas hari ini.');
-        setSaving(false);
-        return;
+      // Only non-admins are blocked from editing if dates are in the past
+      if (user.role !== 'admin' && user.role !== 'peneraju_pemeriksaan') {
+        if (dueDate < today || responseDeadline < today) {
+          setError('Tarikh akhir tindakan atau tarikh maklum balas sudah lepas. Sila hubungi admin untuk ubah tarikh.');
+          setSaving(false);
+          return;
+        }
+      }
+
+      // Admin and peneraju can edit even if dates are in the past, but we warn them
+      if ((user.role === 'admin' || user.role === 'peneraju_pemeriksaan') && (dueDate < today || responseDeadline < today)) {
+        console.warn('⚠️ Admin editing past dates:', {
+          due_date: formData.due_date,
+          response_deadline: formData.response_deadline
+        });
       }
 
       // Update syor basic info (only admin/peneraju can edit)
       if (user.role === 'admin' || user.role === 'peneraju_pemeriksaan') {
+        console.log('📝 Updating syor data...', {
+          title: formData.title.substring(0, 50),
+          pemeriksaan_type: formData.pemeriksaan_type,
+          due_date: formData.due_date,
+          response_deadline: formData.response_deadline
+        });
+
         const syorData = {
           title: formData.title.trim(),
           description: formData.description.trim(),
@@ -340,12 +386,18 @@ export default function SyorDetailsPage() {
           updated_at: new Date().toISOString()
         }
 
-        const { error: syorError } = await supabase
+        const { error: syorError, data: syorResult } = await supabase
           .from('syor')
           .update(syorData)
           .eq('id', syorId)
+          .select()
 
-        if (syorError) throw syorError
+        if (syorError) {
+          console.error('❌ Syor update error:', syorError);
+          throw new Error(`Ralat update syor: ${syorError.message}. ${syorError.hint || ''}`);
+        }
+
+        console.log('✅ Syor updated successfully:', syorResult);
       }
 
       // Update status tracking (only penyelaras can update)
@@ -373,14 +425,45 @@ export default function SyorDetailsPage() {
       setSuccess('Syor berjaya dikemas kini!')
       setError(null)
       setIsEditing(false)
-      // Redirect to syor list page
+      
+      console.log('✅ Save completed successfully');
+
+      // Refresh data
       setTimeout(() => {
-        router.push('/syor')
+        window.location.reload();
       }, 1000)
 
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Ralat tidak diketahui'
-      setError(errorMessage)
+      console.error('💥 Save error (raw):', err);
+      console.error('💥 Error type:', typeof err);
+      console.error('💥 Error constructor:', err?.constructor?.name);
+      console.error('💥 Error keys:', err ? Object.keys(err) : 'null');
+      console.error('💥 Error stringified:', JSON.stringify(err, null, 2));
+      
+      let errorMessage = 'Ralat tidak diketahui';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (err && typeof err === 'object') {
+        // Handle Supabase errors or other object errors
+        const errObj = err as any;
+        if (errObj.message) {
+          errorMessage = errObj.message;
+        } else if (errObj.error) {
+          errorMessage = typeof errObj.error === 'string' ? errObj.error : JSON.stringify(errObj.error);
+        } else if (errObj.details) {
+          errorMessage = errObj.details;
+        } else {
+          errorMessage = JSON.stringify(err);
+        }
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      } else {
+        errorMessage = String(err);
+      }
+      
+      setError('Ralat menyimpan: ' + errorMessage);
+      setSuccess('');
     } finally {
       setSaving(false)
     }
@@ -394,14 +477,30 @@ export default function SyorDetailsPage() {
     }
 
     setDeleting(statusId)
+    console.log('🗑️ Attempting to delete status_tracking record:', statusId)
+    console.log('🔐 User role:', user.role)
+    console.log('🔐 User ID:', user.id)
+    
     try {
-      const { error: deleteError } = await supabase
+      const { data, error: deleteError } = await supabase
         .from('status_tracking')
         .delete()
         .eq('id', statusId)
+        .select()
 
-      if (deleteError) throw deleteError
+      console.log('🗑️ Delete response:', { data, error: deleteError })
 
+      if (deleteError) {
+        console.error('❌ Delete error details:', {
+          message: deleteError.message,
+          details: deleteError.details,
+          hint: deleteError.hint,
+          code: deleteError.code
+        })
+        throw deleteError
+      }
+
+      console.log('✅ Status tracking deleted successfully')
       setSuccess('Rekod sejarah tindakan berjaya dipadam!')
       
       // Refresh data
@@ -410,8 +509,9 @@ export default function SyorDetailsPage() {
       }, 1000)
 
     } catch (err) {
+      console.error('❌ Delete catch error:', err)
       const errorMessage = err instanceof Error ? err.message : 'Ralat tidak diketahui'
-      setError(errorMessage)
+      setError(`Ralat memadam rekod: ${errorMessage}`)
     } finally {
       setDeleting(null)
     }

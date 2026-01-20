@@ -48,33 +48,72 @@ const AnnouncementBox: React.FC = () => {
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
-      // Get total count
-      const { count } = await supabase
-        .from('announcements')
-        .select('*', { count: 'exact', head: true })
-        .eq('published', true);
-      
-      if (count) setTotalCount(count);
+      try {
+        setLoading(true);
+        
+        // Get total count
+        const { count } = await supabase
+          .from('announcements')
+          .select('*', { count: 'exact', head: true })
+          .eq('published', true);
+        
+        if (count !== null) setTotalCount(count);
 
-      // Get paginated data
-      const { data, error } = await supabase
-        .from('announcements')
-        .select('id, title, description, image_url, published, author_id, created_at, updated_at')
-        .eq('published', true)
-        .order('created_at', { ascending: false })
-        .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
-      
-      if (!error && data) {
-        setAnnouncements(data);
+        // Get paginated data
+        const { data, error } = await supabase
+          .from('announcements')
+          .select('id, title, description, image_url, published, author_id, created_at, updated_at')
+          .eq('published', true)
+          .order('created_at', { ascending: false })
+          .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
+        
+        if (error) {
+          console.error('Error fetching announcements:', error);
+          setAnnouncements([]);
+        } else if (data) {
+          setAnnouncements(data);
+        }
+      } catch (error) {
+        console.error('Unexpected error fetching announcements:', error);
+        setAnnouncements([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+    
     fetchAnnouncements();
   }, [currentPage]);
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="w-full max-w-5xl mx-auto">
+        <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8 shadow-2xl">
+          <div className="flex items-center justify-center gap-3">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+            <span className="text-white/90 text-lg">Memuatkan pengumuman...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state
   if (announcements.length === 0) {
     return (
-      <div className="w-full p-4 bg-white rounded-lg shadow text-gray-500">Tiada pengumuman terkini.</div>
+      <div className="w-full max-w-5xl mx-auto">
+        <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8 shadow-2xl">
+          <div className="text-center">
+            <div className="inline-block p-4 bg-white/10 rounded-full mb-4">
+              <svg className="w-12 h-12 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-2">Tiada Pengumuman</h3>
+            <p className="text-white/70">Tiada pengumuman terkini pada masa ini.</p>
+          </div>
+        </div>
+      </div>
     );
   }
 

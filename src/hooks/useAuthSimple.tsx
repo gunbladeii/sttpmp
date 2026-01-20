@@ -78,6 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (email: string) => {
     try {
+      console.log('🔍 Fetching profile for:', email);
+      
       // Fetch user profile via API route (bypasses RLS using service role)
       const profileResponse = await fetch('/api/auth/get-profile', {
         method: 'POST',
@@ -87,15 +89,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email })
       });
 
+      console.log('📡 Profile response status:', profileResponse.status);
+      
       const profileData = await profileResponse.json();
+      console.log('📦 Profile data:', {
+        success: profileData.success,
+        hasUser: !!profileData.user,
+        message: profileData.message,
+        debug: profileData.debug
+      });
 
       if (!profileData.success || !profileData.user) {
-        throw new Error('User profile not found or not approved')
+        const errorMessage = profileData.message || 'User profile not found or not approved';
+        console.error('❌ Profile fetch failed:', errorMessage, profileData.debug);
+        throw new Error(errorMessage)
       }
 
+      console.log('✅ Profile loaded successfully for:', profileData.user.email);
       setUser(profileData.user as unknown as User)
     } catch (err) {
-      console.error('Error fetching user profile:', err)
+      console.error('💥 Error fetching user profile:', err)
       await supabase.auth.signOut()
       throw err
     }

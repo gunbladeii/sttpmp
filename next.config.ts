@@ -1,5 +1,11 @@
 import type { NextConfig } from "next";
 
+// Fix SSL certificate issues in localhost development
+if (process.env.NODE_ENV === 'development') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  console.log('🔧 Development mode: SSL verification disabled for Supabase API');
+}
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
