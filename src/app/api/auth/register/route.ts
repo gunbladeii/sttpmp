@@ -49,9 +49,10 @@ export async function POST(request: NextRequest) {
     const validation = registrationSchema.safeParse(sanitizedBody)
     
     if (!validation.success) {
-      const firstError = validation.error.errors[0]
+      console.error('Validation errors:', validation.error.errors)
+      const firstError = validation.error.errors?.[0]
       return NextResponse.json({ 
-        error: firstError?.message || 'Data tidak sah' 
+        error: firstError?.message || 'Data tidak sah. Sila pastikan semua maklumat diisi dengan betul.' 
       }, { status: 400 })
     }
 
