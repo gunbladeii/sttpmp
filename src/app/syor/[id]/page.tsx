@@ -482,34 +482,36 @@ export default function SyorDetailsPage() {
     console.log('🔐 User ID:', user.id)
     
     try {
-      const { data, error: deleteError } = await supabase
-        .from('status_tracking')
-        .delete()
-        .eq('id', statusId)
-        .select()
+      // Call API route to delete (service role bypasses RLS)
+      const response = await fetch(`/api/status-tracking/${statusId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-      console.log('🗑️ Delete response:', { data, error: deleteError })
+      const result = await response.json()
+      console.log('🗑️ Delete API response:', { 
+        status: response.status, 
+        ok: response.ok,
+        result 
+      })
 
-      if (deleteError) {
-        console.error('❌ Delete error details:', {
-          message: deleteError.message,
-          details: deleteError.details,
-          hint: deleteError.hint,
-          code: deleteError.code
-        })
-        throw deleteError
+      if (!response.ok) {
+        console.error('❌ Delete failed:', result)
+        throw new Error(result.error || 'Gagal memadam rekod sejarah tindakan')
       }
 
       console.log('✅ Status tracking deleted successfully')
       setSuccess('Rekod sejarah tindakan berjaya dipadam!')
       
-      // Refresh data
+      // Refresh data after short delay
       setTimeout(() => {
         window.location.reload()
       }, 1000)
 
     } catch (err) {
-      console.error('❌ Delete catch error:', err)
+      console.error('❌ Delete error:', err)
       const errorMessage = err instanceof Error ? err.message : 'Ralat tidak diketahui'
       setError(`Ralat memadam rekod: ${errorMessage}`)
     } finally {
