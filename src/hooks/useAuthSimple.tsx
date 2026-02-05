@@ -123,6 +123,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('Hanya email dengan domain @moe.gov.my yang dibenarkan')
       }
 
+      console.log('🔐 Attempting login for:', credentials.email)
+
       // Use Supabase Auth for secure login
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: credentials.email,
@@ -130,8 +132,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (authError) {
-        throw new Error('Email atau password tidak betul')
+        console.error('❌ Auth error:', authError)
+        
+        // Provide more specific error messages
+        if (authError.message.includes('Invalid login credentials')) {
+          throw new Error('Email atau password tidak betul. Pastikan anda menggunakan password yang betul.')
+        } else if (authError.message.includes('Email not confirmed')) {
+          throw new Error('Email belum disahkan. Sila hubungi admin untuk reset password.')
+        } else if (authError.message.includes('User not found')) {
+          throw new Error('Akaun tidak wujud. Sila daftar terlebih dahulu.')
+        } else {
+          throw new Error(`Login gagal: ${authError.message}`)
+        }
       }
+
+      console.log('✅ Auth successful for user ID:', authData.user.id)
 
       // Fetch user profile via API route (bypasses RLS using service role)
       const profileResponse = await fetch('/api/auth/get-profile', {
@@ -161,11 +176,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('Akaun belum diluluskan oleh admin. Sila tunggu kelulusan.')
       }
 
+      console.log('✅ Login successful for:', userData.email)
       setUser(userData as unknown as User)
       return { success: true }
 
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Ralat tidak diketahui berlaku'
+      console.error('❌ Login error:', errorMessage)
       setError(errorMessage)
       return { success: false, error: errorMessage }
     } finally {

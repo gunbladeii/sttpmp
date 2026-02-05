@@ -94,11 +94,19 @@ export async function POST(request: NextRequest) {
 
     // Update user password in Supabase Auth using the auth user ID
     console.log('🔄 Attempting Supabase Auth password update for:', matchedAuthUser.id)
+    
+    // IMPORTANT: Update password AND ensure email is confirmed
+    // This is crucial for login to work immediately
     const updateResult = await supabaseAdmin.auth.admin.updateUserById(
       matchedAuthUser.id,
-      { password: temporaryPassword }
+      { 
+        password: temporaryPassword,
+        email_confirm: true  // Ensure email is confirmed so user can login
+      }
     )
+    
     console.log('📝 Supabase Auth update response:', updateResult)
+    
     if (updateResult.error) {
       console.error('❌ Error updating password:', updateResult.error)
       // Log full error object for debugging
@@ -108,6 +116,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+    
+    console.log('✅ Password updated successfully with confirmed email status')
 
     // Send email with temporary password
     try {

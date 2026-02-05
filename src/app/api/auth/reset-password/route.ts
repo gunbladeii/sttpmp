@@ -74,62 +74,80 @@ export async function POST(request: Request) {
     // Get user email for auth account creation
     const { data: user } = await supabase
       .from('users')
-      .select('email')
+      .select('email, id')
       .eq('id', resetData.user_id)
       .single();
 
-    // Check if auth.users account exists first
-    if (user) {
-      try {
-        // Try to update existing auth.users password first
-        const { error: authUpdateError } = await supabase.auth.admin.updateUserById(
-          resetData.user_id,
+    if (!user) {
+      console.error('❌ User not found in users table');
+      return NextResponse.json(
+        { success: false, message: 'Pengguna tidak dijumpai' },
+        { status: 404 }
+      );
+    }
+
+    console.log('🔄 Syncing password for user:', user.email, 'ID:', user.id);
+
+    // CRITICAL FIX: Find the ACTUAL auth user by email (not by ID)
+    // This ensures we update the correct auth account
+    try {
+      const { data: allAuthUsers } = await supabase.auth.admin.listUsers();
+      const authUser = allAuthUsers.users.find(u => u.email === user.email);
+
+      if (authUser) {
+        // Auth user exists - update password using the CORRECT auth ID
+        console.log('✅ Found auth user:', authUser.id, '(Email:', authUser.email, ')');
+        
+        const { error: updateError } = await supabase.auth.admin.updateUserById(
+          authUser.id, // Use the ACTUAL auth user ID, not users.id
           { password: password }
         );
 
-        if (authUpdateError) {
-          // If user_not_found, try to create new auth account
-          if (authUpdateError.message?.includes('User not found') || 
-              authUpdateError.message?.includes('not found')) {
-            console.log('📝 Creating auth account for legacy user with existing ID...');
-            
-            const { error: createError } = await supabase.auth.admin.createUser({
-              id: resetData.user_id,
-              email: user.email,
-              password: password,
-              email_confirm: true,
-              user_metadata: { migrated_from_legacy: true }
-            });
-
-            if (createError) {
-              // If error is "email already registered", try deleting old auth account first
-              if (createError.message?.includes('already been registered')) {
-                console.log('⚠️ Auth email already exists, attempting to update by email...');
-                
-                // Find existing auth user by email
-                const { data: existingAuthUser } = await supabase.auth.admin.listUsers();
-                const authUser = existingAuthUser.users.find(u => u.email === user.email);
-                
-                if (authUser) {
-                  // Update the existing auth user's password
-                  await supabase.auth.admin.updateUserById(authUser.id, { password: password });
-                  console.log('✅ Updated existing auth account password');
-                }
-              } else {
-                console.error('❌ Failed to create auth user:', createError);
-              }
-            } else {
-              console.log('✅ Auth account created successfully');
-            }
-          } else {
-            console.error('❌ Auth update error:', authUpdateError);
-          }
-        } else {
-          console.log('✅ Auth password updated successfully');
+        if (updateError) {
+          console.error('❌ Failed to update auth password:', updateError);
+          throw new Error('Gagal mengemaskini password dalam auth.users');
         }
-      } catch (err) {
-        console.log('⚠️ Auth error:', err);
+
+        // SYNC CHECK: If auth.users ID differs from users.id, update users.id
+        if (authUser.id !== user.id) {
+          console.log('⚠️ ID mismatch detected!');
+          console.log('   - users.id:', user.id);
+          console.log('   - auth.users.id:', authUser.id);
+          console.log('🔧 Updating users.id to match auth.users.id...');
+          
+          await supabase
+            .from('users')
+            .update({ id: authUser.id })
+            .eq('email', user.email);
+          
+          console.log('✅ ID synchronized successfully');
+        }
+
+        console.log('✅ Auth password updated successfully for:', authUser.email);
+      } else {
+        // No auth user exists - create new auth account
+        console.log('📝 No auth account found, creating new auth user...');
+        
+        // Use the users.id as the auth user ID for consistency
+        const { data: newAuthUser, error: createError } = await supabase.auth.admin.createUser({
+          id: user.id,
+          email: user.email,
+          password: password,
+          email_confirm: true,
+          user_metadata: { migrated_from_legacy: true }
+        });
+
+        if (createError) {
+          console.error('❌ Failed to create auth user:', createError);
+          throw new Error('Gagal mencipta auth account');
+        }
+
+        console.log('✅ Auth account created successfully:', newAuthUser.user.id);
       }
+    } catch (err) {
+      console.error('💥 Critical error during auth sync:', err);
+      // Don't fail the request - password in users table is already updated
+      // User can still contact admin if auth login fails
     }
 
     // Mark token as used
