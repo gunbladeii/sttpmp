@@ -52,6 +52,8 @@ interface SyorDetail {
   creator?: { name?: string }
   department?: { name?: string; code?: string } | null
   jpn?: { name?: string; state?: string } | null
+  departments?: Array<{ id?: string; name?: string; code?: string }>
+  jpns?: Array<{ id?: string; name?: string; state?: string }>
   status_tracking?: Array<{
     id?: string
     status?: string
@@ -82,6 +84,8 @@ export default function SyorDetailsPage() {
   const [success, setSuccess] = useState<string | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Form data for editing
   const [formData, setFormData] = useState({
@@ -117,6 +121,8 @@ export default function SyorDetailsPage() {
               weight,
               comments,
               updated_at,
+              assigned_department:department_id(id, name, code),
+              assigned_jpn:jpn_id(id, name, state),
               updater:updated_by(
                 name,
                 department:department_id(name, code),
@@ -145,6 +151,21 @@ export default function SyorDetailsPage() {
 
         const latestStatusData = sortedStatusTracking?.[0] || {};
 
+        // Extract assigned departments and JPNs from status_tracking (NEW - support multiple assignments)
+        const assignedDepartments = sortedStatusTracking
+          .filter((st: any) => st.assigned_department)
+          .map((st: any) => st.assigned_department)
+          .filter((dept: any, index: number, self: any[]) => 
+            index === self.findIndex((d: any) => d?.id === dept?.id)
+          ); // Remove duplicates
+
+        const assignedJPNs = sortedStatusTracking
+          .filter((st: any) => st.assigned_jpn)
+          .map((st: any) => st.assigned_jpn)
+          .filter((jpn: any, index: number, self: any[]) => 
+            index === self.findIndex((j: any) => j?.id === jpn?.id)
+          ); // Remove duplicates
+
         setSyor({
           ...data,
           title: data.title || '-',
@@ -156,8 +177,12 @@ export default function SyorDetailsPage() {
           assigned_to_department: data.assigned_to_department || '-',
           assigned_to_jpn: data.assigned_to_jpn || '-',
           creator: data.creator || { name: '-' },
-          department: data.department || { name: '-', code: '-' },
-          jpn: data.jpn || { name: '-', state: '-' },
+          // Use first assigned department/JPN for backward compatibility with single-value display
+          department: assignedDepartments[0] || { name: '-', code: '-' },
+          jpn: assignedJPNs[0] || { name: '-', state: '-' },
+          // Store multiple assignments for new multi-display
+          departments: assignedDepartments,
+          jpns: assignedJPNs,
           status_tracking: sortedStatusTracking
         });
         setFormData({
@@ -167,8 +192,8 @@ export default function SyorDetailsPage() {
           pemeriksaan_type: data.pemeriksaan_type || '',
           due_date: data.due_date || '',
           response_deadline: data.response_deadline || '',
-          assigned_to_department: data.assigned_to_department || '',
-          assigned_to_jpn: data.assigned_to_jpn || '',
+          assigned_to_department: assignedDepartments[0]?.id || '',
+          assigned_to_jpn: assignedJPNs[0]?.id || '',
           tindakan_comments: latestStatusData?.comments || '',
           tindakan_status: latestStatusData?.status || ''
         });
@@ -317,16 +342,14 @@ export default function SyorDetailsPage() {
       if (!formData.response_deadline) {
         throw new Error('Tarikh maklum balas mesti diisi');
       }
-      if (!formData.assigned_to_department && !formData.assigned_to_jpn) {
+      // Check if syor has assignments (via status_tracking)
+      if (!syor.departments?.length && !syor.jpns?.length) {
         throw new Error('Syor mesti diassign kepada Bahagian atau JPN');
       }
 
-      // Check permissions
-      const canEdit = user.role === 'admin' || user.role === 'peneraju_pemeriksaan' || 
-                     (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
-                     (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
-
-      if (!canEdit) {
+      // Check permissions - use the canEdit constant defined earlier
+      // (already fixed to check departments/jpns arrays)
+      if (!canEdit && !canEditTindakan) {
         throw new Error('Anda tidak mempunyai kebenaran untuk mengedit syor ini')
       }
 
@@ -381,8 +404,9 @@ export default function SyorDetailsPage() {
           pemeriksaan_type: formData.pemeriksaan_type,
           due_date: formData.due_date,
           response_deadline: formData.response_deadline,
-          assigned_to_department: formData.assigned_to_department || null,
-          assigned_to_jpn: formData.assigned_to_jpn || null,
+          // Keep deprecated columns as NULL (assignments now in status_tracking)
+          assigned_to_department: null,
+          assigned_to_jpn: null,
           updated_at: new Date().toISOString()
         }
 
@@ -404,10 +428,22 @@ export default function SyorDetailsPage() {
       if (canEditTindakan && formData.tindakan_comments.trim()) {
         const statusEnum = ['belum_selesai', 'dalam_tindakan', 'selesai']
         const safeStatus = statusEnum.includes(formData.tindakan_status) ? formData.tindakan_status : 'belum_selesai'
+        
+        // Find existing status_tracking record for this user's department/jpn
+        const existingRecordQuery = supabase
+          .from('status_tracking')
+          .select('id')
+          .eq('syor_id', syorId)
+        
+        if (user.role === 'penyelaras_bahagian') {
+          existingRecordQuery.eq('department_id', user.department_id)
+        } else if (user.role === 'penyelaras_jpn') {
+          existingRecordQuery.eq('jpn_id', user.jpn_id)
+        }
+        
+        const { data: existingRecord } = await existingRecordQuery.maybeSingle()
+
         const statusData = {
-          syor_id: syorId,
-          department_id: formData.assigned_to_department || null,
-          jpn_id: formData.assigned_to_jpn || null,
           status: safeStatus,
           weight: safeStatus === 'belum_selesai' ? 0 : safeStatus === 'dalam_tindakan' ? 0.5 : 1,
           comments: formData.tindakan_comments.trim(),
@@ -415,11 +451,27 @@ export default function SyorDetailsPage() {
           updated_at: new Date().toISOString()
         }
 
-        const { error: statusError } = await supabase
-          .from('status_tracking')
-          .insert([statusData])
+        if (existingRecord) {
+          // UPDATE existing record
+          const { error: statusError } = await supabase
+            .from('status_tracking')
+            .update(statusData)
+            .eq('id', existingRecord.id)
 
-        if (statusError) throw statusError
+          if (statusError) throw statusError
+        } else {
+          // INSERT new record (first time responding)
+          const { error: statusError } = await supabase
+            .from('status_tracking')
+            .insert([{
+              syor_id: syorId,
+              department_id: user.role === 'penyelaras_bahagian' ? user.department_id : null,
+              jpn_id: user.role === 'penyelaras_jpn' ? user.jpn_id : null,
+              ...statusData
+            }])
+
+          if (statusError) throw statusError
+        }
       }
 
       setSuccess('Syor berjaya dikemas kini!')
@@ -530,12 +582,56 @@ export default function SyorDetailsPage() {
     setSuccess('Dokumen berjaya dipadam!')
   }
 
+  // Delete syor handler (admin-only)
+  const handleDeleteSyor = async () => {
+    if (!user || !syor || user.role !== 'admin') {
+      setError('Hanya admin boleh memadam syor')
+      return
+    }
+
+    setIsDeleting(true)
+    setError(null)
+
+    try {
+      console.log('🗑️ Deleting syor:', syorId)
+
+      const response = await fetch(`/api/syor/${syorId}?userEmail=${encodeURIComponent(user.email)}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('❌ Delete failed:', result)
+        throw new Error(result.error || 'Gagal memadam syor')
+      }
+
+      console.log('✅ Syor deleted successfully:', result)
+      
+      // Redirect to syor list page after successful deletion
+      setSuccess('Syor berjaya dipadam! Mengalihkan ke senarai syor...')
+      setTimeout(() => {
+        router.push('/syor')
+      }, 1500)
+
+    } catch (err) {
+      console.error('❌ Delete syor error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Ralat tidak diketahui'
+      setError(`Ralat memadam syor: ${errorMessage}`)
+      setShowDeleteConfirm(false)
+      setIsDeleting(false)
+    }
+  }
+
   const canEdit = Boolean(
     user && syor && (
       user.role === 'admin' ||
       user.role === 'peneraju_pemeriksaan' ||
-      (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
-      (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
+      (user.role === 'penyelaras_bahagian' && syor.departments?.some(dept => dept?.id === user.department_id)) ||
+      (user.role === 'penyelaras_jpn' && syor.jpns?.some(jpn => jpn?.id === user.jpn_id))
     )
   )
 
@@ -545,8 +641,8 @@ export default function SyorDetailsPage() {
     user && syor && (
       user.role === 'admin' ||
       user.role === 'peneraju_pemeriksaan' ||
-      (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
-      (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
+      (user.role === 'penyelaras_bahagian' && syor.departments?.some(dept => dept?.id === user.department_id)) ||
+      (user.role === 'penyelaras_jpn' && syor.jpns?.some(jpn => jpn?.id === user.jpn_id))
     )
   )
 
@@ -554,8 +650,8 @@ export default function SyorDetailsPage() {
     user && syor && (
       user.role === 'admin' ||
       user.role === 'peneraju_pemeriksaan' ||
-      (user.role === 'penyelaras_bahagian' && user.department_id === syor.assigned_to_department) ||
-      (user.role === 'penyelaras_jpn' && user.jpn_id === syor.assigned_to_jpn)
+      (user.role === 'penyelaras_bahagian' && syor.departments?.some(dept => dept?.id === user.department_id)) ||
+      (user.role === 'penyelaras_jpn' && syor.jpns?.some(jpn => jpn?.id === user.jpn_id))
     )
   )
 
@@ -657,12 +753,24 @@ export default function SyorDetailsPage() {
             {canEdit && (
               <div className="flex gap-3">
                 {!isEditing ? (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="cloudpeak-button px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105"
-                  >
-                    Edit Syor
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="cloudpeak-button px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105"
+                    >
+                      Edit Syor
+                    </button>
+                    {/* Admin-only delete button */}
+                    {user?.role === 'admin' && (
+                      <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all transform hover:scale-105"
+                        title="Hanya admin boleh memadam syor"
+                      >
+                        🗑️ Padam Syor
+                      </button>
+                    )}
+                  </>
                 ) : (
                   <>
                     <button
@@ -814,11 +922,20 @@ export default function SyorDetailsPage() {
                       ))}
                     </select>
                   ) : (
-                    <p className="text-slate-300 text-lg">
-                      {(!syor.department || !syor.department.name || syor.department.name === '-' || !syor.department.code || syor.department.code === '-')
-                        ? 'Tidak Berkaitan'
-                        : `${syor.department.name} (${syor.department.code})`}
-                    </p>
+                    <div className="text-slate-300 text-lg">
+                      {syor.departments && syor.departments.length > 0 ? (
+                        <div className="space-y-2">
+                          {syor.departments.map((dept: any, index: number) => (
+                            <div key={dept.id || index} className="flex items-center gap-2">
+                              <span className="text-blue-400">•</span>
+                              <span>{dept.name} ({dept.code})</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p>Tidak Berkaitan</p>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -841,11 +958,20 @@ export default function SyorDetailsPage() {
                       ))}
                     </select>
                   ) : (
-                    <p className="text-slate-300 text-lg">
-                      {(!syor.jpn || !syor.jpn.name || syor.jpn.name === '-' || !syor.jpn.state || syor.jpn.state === '-')
-                        ? 'Tidak Berkaitan'
-                        : `${syor.jpn.name} (${syor.jpn.state})`}
-                    </p>
+                    <div className="text-slate-300 text-lg">
+                      {syor.jpns && syor.jpns.length > 0 ? (
+                        <div className="space-y-2">
+                          {syor.jpns.map((jpn: any, index: number) => (
+                            <div key={jpn.id || index} className="flex items-center gap-2">
+                              <span className="text-blue-400">•</span>
+                              <span>{jpn.name} ({jpn.state})</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p>Tidak Berkaitan</p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -1117,6 +1243,70 @@ export default function SyorDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 border border-slate-700 rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-red-500/20 rounded-full">
+                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white">Padam Syor?</h3>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-slate-300 mb-2">
+                Adakah anda pasti untuk memadam syor ini?
+              </p>
+              <p className="text-sm text-red-400 font-medium">
+                ⚠️ Tindakan ini tidak boleh dibatalkan!
+              </p>
+              <div className="mt-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
+                <p className="text-sm text-slate-400">Syor yang akan dipadam:</p>
+                <p className="text-white font-medium mt-1">{syor?.title}</p>
+              </div>
+              <div className="mt-3 text-xs text-slate-400">
+                <p>Data yang akan dipadam:</p>
+                <ul className="list-disc list-inside ml-2 mt-1">
+                  <li>Syor ini</li>
+                  <li>Semua sejarah tindakan</li>
+                  <li>Semua notifikasi berkaitan</li>
+                  <li>Semua dokumen berkaitan</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="flex-1 px-6 py-3 border border-slate-500 text-slate-300 rounded-lg hover:bg-slate-600/30 transition-all font-medium disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleDeleteSyor}
+                disabled={isDeleting}
+                className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Memadam...
+                  </>
+                ) : (
+                  <>
+                    🗑️ Ya, Padam
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

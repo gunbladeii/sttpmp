@@ -63,6 +63,8 @@ export default function SyorList() {
             weight,
             comments,
             updated_at,
+            assigned_department:department_id(id, name, code),
+            assigned_jpn:jpn_id(id, name, state),
             updater:updated_by(name)
           )
         `)
@@ -70,11 +72,38 @@ export default function SyorList() {
       // Apply role-based filtering
       if (user?.role === 'penyelaras_bahagian' && user?.department_id) {
         // Penyelaras Bahagian: only see syor assigned to their department
-        query = query.eq('assigned_to_department', user.department_id)
+        // Filter via status_tracking.department_id
+        const { data: syorIds } = await supabase
+          .from('status_tracking')
+          .select('syor_id')
+          .eq('department_id', user.department_id)
+        
+        if (syorIds && syorIds.length > 0) {
+          const ids = syorIds.map(s => s.syor_id)
+          query = query.in('id', ids)
+        } else {
+          // No assignments - return empty array instead of querying
+          setSyor([])
+          setLoading(false)
+          return
+        }
       } else if ((user?.role === 'penyelaras_jpn' || user?.role === 'penyelaras_jnn') && user?.jpn_id) {
         // Penyelaras JPN & JNN: only see syor assigned to their JPN
-        // (JNN has read-only access, JPN has edit access)
-        query = query.eq('assigned_to_jpn', user.jpn_id)
+        // Filter via status_tracking.jpn_id
+        const { data: syorIds } = await supabase
+          .from('status_tracking')
+          .select('syor_id')
+          .eq('jpn_id', user.jpn_id)
+        
+        if (syorIds && syorIds.length > 0) {
+          const ids = syorIds.map(s => s.syor_id)
+          query = query.in('id', ids)
+        } else {
+          // No assignments - return empty array instead of querying
+          setSyor([])
+          setLoading(false)
+          return
+        }
       } else if (user?.role === 'peneraju_pemeriksaan' && user?.sector) {
         // Peneraju Pemeriksaan: see syor created by users in their sector
         // Filter by created_by users who have the same sector
@@ -90,8 +119,10 @@ export default function SyorList() {
           // Show syor created by users in their sector
           query = query.in('created_by', userIds)
         } else {
-          // If no users in their sector, show no syor (edge case)
-          query = query.eq('created_by', 'non-existent-id')
+          // No users in sector - return empty array instead of querying
+          setSyor([])
+          setLoading(false)
+          return
         }
       }
       // Admin and pemantau can see all syor (no filter)
@@ -330,6 +361,23 @@ export default function SyorList() {
                 const latestStatus = sortedStatusTracking?.[0]
                 const statusType = latestStatus?.status || 'belum_selesai'
                 
+                // Extract assigned departments and JPNs from status_tracking
+                const assignedDepartments = item.status_tracking
+                  ?.filter((st: any) => st.assigned_department)
+                  .map((st: any) => st.assigned_department)
+                  .filter((dept: any, index: number, self: any[]) => 
+                    index === self.findIndex((d: any) => d?.id === dept?.id)
+                  ) || [];
+                
+                const assignedJPNs = item.status_tracking
+                  ?.filter((st: any) => st.assigned_jpn)
+                  .map((st: any) => st.assigned_jpn)
+                  .filter((jpn: any, index: number, self: any[]) => 
+                    index === self.findIndex((j: any) => j?.id === jpn?.id)
+                  ) || [];
+                
+                const hasAssignments = assignedDepartments.length > 0 || assignedJPNs.length > 0;
+                
                 // Calculate deadline status
                 const today = new Date()
                 const responseDeadline = new Date(item.response_deadline || item.due_date)
@@ -408,7 +456,23 @@ export default function SyorList() {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-2m-12 0H3m2 0h2M9 7h6m-6 4h6m-6 4h6" />
                             </svg>
-                            <span className="text-white font-medium">Assigned to:</span> {item.department?.name || item.jpn?.name || 'Unassigned'}
+                            <span className="text-white font-medium">Assigned to:</span>
+                            {hasAssignments ? (
+                              <div className="flex flex-wrap gap-1">
+                                {assignedDepartments.map((dept: any, idx: number) => (
+                                  <span key={`dept-${dept.id || idx}`} className="text-blue-300">
+                                    {dept.name}{idx < assignedDepartments.length - 1 || assignedJPNs.length > 0 ? ',' : ''}
+                                  </span>
+                                ))}
+                                {assignedJPNs.map((jpn: any, idx: number) => (
+                                  <span key={`jpn-${jpn.id || idx}`} className="text-green-300">
+                                    {jpn.name}{idx < assignedJPNs.length - 1 ? ',' : ''}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-slate-500 italic">Unassigned</span>
+                            )}
                           </div>
 
                           {item.creator && (

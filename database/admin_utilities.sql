@@ -197,7 +197,9 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- View for admin dashboard statistics
-CREATE OR REPLACE VIEW admin_dashboard_stats AS
+-- Using SECURITY INVOKER for better security (uses querying user's permissions)
+CREATE OR REPLACE VIEW admin_dashboard_stats
+WITH (security_invoker = true) AS
 SELECT 
     (SELECT COUNT(*) FROM users WHERE is_active = true) as active_users,
     (SELECT COUNT(*) FROM users WHERE is_approved = false) as pending_approvals,

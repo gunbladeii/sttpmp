@@ -241,14 +241,42 @@ export default function Dashboard() {
             creator:created_by(name, sector),
             department:assigned_to_department(name, code, sector),
             jpn:assigned_to_jpn(name, state),
-            status_tracking(*)
+            status_tracking(
+              *,
+              assigned_department:department_id(id, name, code),
+              assigned_jpn:jpn_id(id, name, state)
+            )
           `)
 
         // Apply role-based filtering for syor
         if (user?.role === 'penyelaras_bahagian' && user?.department_id) {
-          syorQuery = syorQuery.eq('assigned_to_department', user.department_id)
+          // Filter via status_tracking.department_id instead of deprecated column
+          const { data: syorIds } = await supabase
+            .from('status_tracking')
+            .select('syor_id')
+            .eq('department_id', user.department_id)
+          
+          if (syorIds && syorIds.length > 0) {
+            const ids = syorIds.map(s => s.syor_id)
+            syorQuery = syorQuery.in('id', ids)
+          } else {
+            // No assignments - will set empty data later
+            syorQuery = null as any
+          }
         } else if ((user?.role === 'penyelaras_jpn' || user?.role === 'penyelaras_jnn') && user?.jpn_id) {
-          syorQuery = syorQuery.eq('assigned_to_jpn', user.jpn_id)
+          // Filter via status_tracking.jpn_id instead of deprecated column
+          const { data: syorIds } = await supabase
+            .from('status_tracking')
+            .select('syor_id')
+            .eq('jpn_id', user.jpn_id)
+          
+          if (syorIds && syorIds.length > 0) {
+            const ids = syorIds.map(s => s.syor_id)
+            syorQuery = syorQuery.in('id', ids)
+          } else {
+            // No assignments - will set empty data later
+            syorQuery = null as any
+          }
         } else if (user?.role === 'peneraju_pemeriksaan' && user?.sector) {
           // Peneraju Pemeriksaan: see syor created by users in their sector
           const { data: usersInSector } = await supabase
@@ -260,14 +288,14 @@ export default function Dashboard() {
             const userIds = usersInSector.map(u => u.id)
             syorQuery = syorQuery.in('created_by', userIds)
           } else {
-            // If no users in their sector, show no syor
-            syorQuery = syorQuery.eq('id', 'no-match-uuid')
+            // No users in sector - will set empty data later
+            syorQuery = null as any
           }
         }
 
-        const { data: syorData, error: syorError } = await syorQuery
-          .order('created_at', { ascending: false })
-          .limit(10)
+        const { data: syorData, error: syorError } = syorQuery 
+          ? await syorQuery.order('created_at', { ascending: false }).limit(10)
+          : { data: [], error: null }
 
         if (syorError) throw syorError
 
@@ -279,14 +307,38 @@ export default function Dashboard() {
             creator:created_by(name, sector),
             department:assigned_to_department(name, code, sector),
             jpn:assigned_to_jpn(name, state),
-            status_tracking(*)
+            status_tracking(
+              *,
+              assigned_department:department_id(id, name, code),
+              assigned_jpn:jpn_id(id, name, state)
+            )
           `)
 
         // Apply same role-based filtering for all syor
         if (user?.role === 'penyelaras_bahagian' && user?.department_id) {
-          allSyorQuery = allSyorQuery.eq('assigned_to_department', user.department_id)
+          const { data: syorIds } = await supabase
+            .from('status_tracking')
+            .select('syor_id')
+            .eq('department_id', user.department_id)
+          
+          if (syorIds && syorIds.length > 0) {
+            const ids = syorIds.map(s => s.syor_id)
+            allSyorQuery = allSyorQuery.in('id', ids)
+          } else {
+            allSyorQuery = null as any
+          }
         } else if ((user?.role === 'penyelaras_jpn' || user?.role === 'penyelaras_jnn') && user?.jpn_id) {
-          allSyorQuery = allSyorQuery.eq('assigned_to_jpn', user.jpn_id)
+          const { data: syorIds } = await supabase
+            .from('status_tracking')
+            .select('syor_id')
+            .eq('jpn_id', user.jpn_id)
+          
+          if (syorIds && syorIds.length > 0) {
+            const ids = syorIds.map(s => s.syor_id)
+            allSyorQuery = allSyorQuery.in('id', ids)
+          } else {
+            allSyorQuery = null as any
+          }
         } else if (user?.role === 'peneraju_pemeriksaan' && user?.sector) {
           // Reuse the same user filtering logic
           const { data: usersInSector } = await supabase
@@ -298,11 +350,13 @@ export default function Dashboard() {
             const userIds = usersInSector.map(u => u.id)
             allSyorQuery = allSyorQuery.in('created_by', userIds)
           } else {
-            allSyorQuery = allSyorQuery.eq('id', 'no-match-uuid')
+            allSyorQuery = null as any
           }
         }
 
-        const { data: allSyorData, error: allSyorError } = await allSyorQuery.order('created_at', { ascending: false })
+        const { data: allSyorData, error: allSyorError } = allSyorQuery 
+          ? await allSyorQuery.order('created_at', { ascending: false })
+          : { data: [], error: null }
 
         if (allSyorError) throw allSyorError
 

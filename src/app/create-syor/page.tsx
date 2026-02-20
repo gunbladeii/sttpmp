@@ -36,6 +36,10 @@ export default function CreateSyorPage() {
   const [loading, setLoading] = useState(false)
   const [departments, setDepartments] = useState<Department[]>([])
   const [jpns, setJpns] = useState<JPN[]>([])
+  const [filteredDepartments, setFilteredDepartments] = useState<Department[]>([])
+  const [filteredJpns, setFilteredJpns] = useState<JPN[]>([])
+  const [departmentSearch, setDepartmentSearch] = useState('')
+  const [jpnSearch, setJpnSearch] = useState('')
   const [pemeriksaanList, setPemeriksaanList] = useState<Pemeriksaan[]>([])
   const [filteredPemeriksaan, setFilteredPemeriksaan] = useState<Pemeriksaan[]>([])
   const [pemeriksaanSearch, setPemeriksaanSearch] = useState('')
@@ -48,8 +52,8 @@ export default function CreateSyorPage() {
   const [formData, setFormData] = useState({
     title: '',
     syor_content: '',
-    assigned_to_department: '',
-    assigned_to_jpn: '',
+    assigned_to_departments: [] as string[], // Changed to array for multiple selections
+    assigned_to_jpns: [] as string[], // Changed to array for multiple selections
     priority: 'sederhana' as const,
     pemeriksaan_type: 'mata_pelajaran' as const,
     due_date: '',
@@ -85,12 +89,12 @@ export default function CreateSyorPage() {
         if (jpnError) throw jpnError
 
         setDepartments(deptData || [])
+        setFilteredDepartments(deptData || [])
         setJpns(jpnData || [])
+        setFilteredJpns(jpnData || [])
 
         // Fetch pemeriksaan data from MOE API
         try {
-          const currentYear = new Date().getFullYear().toString()
-          
           // Fetch both APIs in parallel
           const [pemeriksaanResponse, jenisPemeriksaanResponse] = await Promise.all([
             fetch('https://enazir.moe.gov.my/APIcall.php/tknamapemeriksaan'),
@@ -108,11 +112,16 @@ export default function CreateSyorPage() {
           console.log('Pemeriksaan Data Sample:', pemeriksaanData[0])
           console.log('Jenis Pemeriksaan Data Sample:', jenisPemeriksaanData[0])
           
-          // Filter by current year
-          const currentYearData = pemeriksaanData.filter((item: Pemeriksaan) => item.Tahun === currentYear)
+          // Filter by current year + 1 year back (e.g., 2026 + 2025)
+          const currentYear = new Date().getFullYear()
+          const previousYear = currentYear - 1
+          const filteredData = pemeriksaanData.filter((item: Pemeriksaan) => {
+            const tahun = parseInt(item.Tahun)
+            return tahun === currentYear || tahun === previousYear
+          })
           
-          setPemeriksaanList(currentYearData)
-          setFilteredPemeriksaan(currentYearData)
+          setPemeriksaanList(filteredData)
+          setFilteredPemeriksaan(filteredData)
           setJenisPemeriksaanList(jenisPemeriksaanData)
         } catch (apiError) {
           console.error('Error fetching pemeriksaan:', apiError)
@@ -139,6 +148,32 @@ export default function CreateSyorPage() {
       setFilteredPemeriksaan(filtered)
     }
   }, [pemeriksaanSearch, pemeriksaanList])
+
+  // Filter departments based on search
+  useEffect(() => {
+    if (!departmentSearch.trim()) {
+      setFilteredDepartments(departments)
+    } else {
+      const filtered = departments.filter(dept =>
+        dept.name.toLowerCase().includes(departmentSearch.toLowerCase()) ||
+        dept.code.toLowerCase().includes(departmentSearch.toLowerCase())
+      )
+      setFilteredDepartments(filtered)
+    }
+  }, [departmentSearch, departments])
+
+  // Filter JPNs based on search
+  useEffect(() => {
+    if (!jpnSearch.trim()) {
+      setFilteredJpns(jpns)
+    } else {
+      const filtered = jpns.filter(jpn =>
+        jpn.name.toLowerCase().includes(jpnSearch.toLowerCase()) ||
+        jpn.state.toLowerCase().includes(jpnSearch.toLowerCase())
+      )
+      setFilteredJpns(filtered)
+    }
+  }, [jpnSearch, jpns])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -178,6 +213,33 @@ export default function CreateSyorPage() {
     }
   }
 
+  // Handler for multiple department/JPN checkbox selection
+  const handleDepartmentToggle = (deptId: string) => {
+    setFormData(prev => {
+      const isSelected = prev.assigned_to_departments.includes(deptId)
+      return {
+        ...prev,
+        assigned_to_departments: isSelected 
+          ? prev.assigned_to_departments.filter(id => id !== deptId)
+          : [...prev.assigned_to_departments, deptId],
+        assigned_to_jpns: [] // Clear JPN selection when selecting departments
+      }
+    })
+  }
+
+  const handleJPNToggle = (jpnId: string) => {
+    setFormData(prev => {
+      const isSelected = prev.assigned_to_jpns.includes(jpnId)
+      return {
+        ...prev,
+        assigned_to_jpns: isSelected 
+          ? prev.assigned_to_jpns.filter(id => id !== jpnId)
+          : [...prev.assigned_to_jpns, jpnId],
+        assigned_to_departments: [] // Clear department selection when selecting JPNs
+      }
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
@@ -195,10 +257,11 @@ export default function CreateSyorPage() {
         throw new Error('Kandungan syor diperlukan')
       }
       
-      if (!formData.assigned_to_department && !formData.assigned_to_jpn) {
-        throw new Error('Sila pilih sama ada Bahagian atau JPN')
+      // Updated validation for multiple assignments
+      if (formData.assigned_to_departments.length === 0 && formData.assigned_to_jpns.length === 0) {
+        throw new Error('Sila pilih sekurang-kurangnya satu Bahagian atau JPN')
       }
-      if (formData.assigned_to_department && formData.assigned_to_jpn) {
+      if (formData.assigned_to_departments.length > 0 && formData.assigned_to_jpns.length > 0) {
         throw new Error('Sila pilih sama ada Bahagian atau JPN sahaja, bukan kedua-duanya')
       }
       if (!formData.due_date) {
@@ -222,8 +285,8 @@ export default function CreateSyorPage() {
         response_deadline: formData.response_deadline,
         created_by: user.id,
         assigned_by: user.id,
-        assigned_to_department: formData.assigned_to_department || null,
-        assigned_to_jpn: formData.assigned_to_jpn || null,
+        assigned_to_department: null, // Deprecated - using status_tracking now
+        assigned_to_jpn: null, // Deprecated - using status_tracking now
         endorsement_date: new Date().toISOString().split('T')[0]
       }
 
@@ -240,39 +303,69 @@ export default function CreateSyorPage() {
         throw new Error(`Gagal cipta syor: ${syorError.message}`)
       }
 
-      const statusData = {
-        syor_id: newSyor.id,
-        department_id: formData.assigned_to_department || null,
-        jpn_id: formData.assigned_to_jpn || null,
-        status: 'belum_selesai' as const,
-        weight: 0.0,
-        comments: 'Syor baharu telah dicipta dan menunggu tindakan.',
-        updated_by: user.id
+      // Create multiple status_tracking records for each assignment
+      const statusRecords = []
+      
+      // Create records for departments
+      if (formData.assigned_to_departments.length > 0) {
+        for (const deptId of formData.assigned_to_departments) {
+          statusRecords.push({
+            syor_id: newSyor.id,
+            department_id: deptId,
+            jpn_id: null,
+            status: 'belum_selesai' as const,
+            weight: 0.0,
+            comments: 'Syor baharu telah dicipta dan menunggu tindakan.',
+            updated_by: user.id
+          })
+        }
+      }
+      
+      // Create records for JPNs
+      if (formData.assigned_to_jpns.length > 0) {
+        for (const jpnId of formData.assigned_to_jpns) {
+          statusRecords.push({
+            syor_id: newSyor.id,
+            department_id: null,
+            jpn_id: jpnId,
+            status: 'belum_selesai' as const,
+            weight: 0.0,
+            comments: 'Syor baharu telah dicipta dan menunggu tindakan.',
+            updated_by: user.id
+          })
+        }
       }
 
-      console.log('Inserting status data:', statusData)
+      console.log('Inserting status records:', statusRecords)
 
       const { error: statusError } = await supabase
         .from('status_tracking')
-        .insert([statusData])
+        .insert(statusRecords)
 
       if (statusError) {
         console.error('Status insert error:', statusError)
         throw new Error(`Gagal cipta status: ${statusError.message}`)
       }
 
-      setSuccess('Syor berjaya dicipta!')
+      setSuccess(`Syor berjaya dicipta dan dihantar kepada ${statusRecords.length} pihak!`)
       
+      // Reset form
       setFormData({
         title: '',
         syor_content: '',
-        assigned_to_department: '',
-        assigned_to_jpn: '',
+        assigned_to_departments: [],
+        assigned_to_jpns: [],
         priority: 'sederhana',
         pemeriksaan_type: 'mata_pelajaran',
         due_date: '',
         response_deadline: ''
       })
+      
+      // Clear all search fields
+      setPemeriksaanSearch('')
+      setDepartmentSearch('')
+      setJpnSearch('')
+      setSelectedJenisPemeriksaan('')
 
       setTimeout(() => {
         router.push('/syor')
@@ -293,12 +386,6 @@ export default function CreateSyorPage() {
       ...prev,
       [name]: value
     }))
-
-    if (name === 'assigned_to_department' && value) {
-      setFormData(prev => ({ ...prev, assigned_to_jpn: '' }))
-    } else if (name === 'assigned_to_jpn' && value) {
-      setFormData(prev => ({ ...prev, assigned_to_department: '' }))
-    }
   }
 
   return (
@@ -387,47 +474,131 @@ export default function CreateSyorPage() {
               )}
               
               <p className="text-xs text-slate-400 mt-2">
-                📋 Senarai pemeriksaan untuk tahun {new Date().getFullYear()} dari sistem MOE
+                📋 Senarai pemeriksaan untuk tahun {new Date().getFullYear()} dan {new Date().getFullYear() - 1} dari sistem MOE
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-3">
-                  Nama Bahagian
+                  Nama Bahagian {formData.assigned_to_departments.length > 0 && (
+                    <span className="text-blue-400 ml-2">({formData.assigned_to_departments.length} dipilih)</span>
+                  )}
                 </label>
-                <select
-                  name="assigned_to_department"
-                  value={formData.assigned_to_department}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                >
-                  <option value="">Pilih Bahagian</option>
-                  {departments.map((dept) => (
-                    <option key={dept.id} value={dept.id}>
-                      {dept.name} ({dept.code})
-                    </option>
-                  ))}
-                </select>
+                <div className="border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg overflow-hidden">
+                  {/* Search input */}
+                  <div className="p-3 border-b border-slate-600 bg-slate-900 bg-opacity-30">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={departmentSearch}
+                        onChange={(e) => setDepartmentSearch(e.target.value)}
+                        placeholder="🔍 Cari bahagian..."
+                        disabled={formData.assigned_to_jpns.length > 0}
+                        className="w-full px-3 py-2 text-sm bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      {departmentSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setDepartmentSearch('')}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Checkbox list */}
+                  <div className="max-h-56 overflow-y-auto p-4 space-y-2">
+                    {filteredDepartments.length === 0 ? (
+                      <p className="text-slate-400 text-sm">
+                        {departmentSearch ? `Tiada bahagian dijumpai untuk "${departmentSearch}"` : 'Tiada bahagian tersedia'}
+                      </p>
+                    ) : (
+                      filteredDepartments.map((dept) => (
+                        <label 
+                          key={dept.id} 
+                          className="flex items-center gap-3 p-2 hover:bg-slate-700 rounded-lg cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.assigned_to_departments.includes(dept.id)}
+                            onChange={() => handleDepartmentToggle(dept.id)}
+                            disabled={formData.assigned_to_jpns.length > 0}
+                            className="w-4 h-4 text-blue-500 bg-slate-700 border-slate-500 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <span className={`text-sm ${formData.assigned_to_jpns.length > 0 ? 'text-slate-500' : 'text-white'}`}>
+                            {dept.name} ({dept.code})
+                          </span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-3">
-                  Nama JPN
+                  Nama JPN {formData.assigned_to_jpns.length > 0 && (
+                    <span className="text-blue-400 ml-2">({formData.assigned_to_jpns.length} dipilih)</span>
+                  )}
                 </label>
-                <select
-                  name="assigned_to_jpn"
-                  value={formData.assigned_to_jpn}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                >
-                  <option value="">Pilih JPN</option>
-                  {jpns.map((jpn) => (
-                    <option key={jpn.id} value={jpn.id}>
-                      {jpn.name} ({jpn.state})
-                    </option>
-                  ))}
-                </select>
+                <div className="border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg overflow-hidden">
+                  {/* Search input */}
+                  <div className="p-3 border-b border-slate-600 bg-slate-900 bg-opacity-30">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={jpnSearch}
+                        onChange={(e) => setJpnSearch(e.target.value)}
+                        placeholder="🔍 Cari JPN..."
+                        disabled={formData.assigned_to_departments.length > 0}
+                        className="w-full px-3 py-2 text-sm bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      {jpnSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setJpnSearch('')}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Checkbox list */}
+                  <div className="max-h-56 overflow-y-auto p-4 space-y-2">
+                    {filteredJpns.length === 0 ? (
+                      <p className="text-slate-400 text-sm">
+                        {jpnSearch ? `Tiada JPN dijumpai untuk "${jpnSearch}"` : 'Tiada JPN tersedia'}
+                      </p>
+                    ) : (
+                      filteredJpns.map((jpn) => (
+                        <label 
+                          key={jpn.id} 
+                          className="flex items-center gap-3 p-2 hover:bg-slate-700 rounded-lg cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.assigned_to_jpns.includes(jpn.id)}
+                            onChange={() => handleJPNToggle(jpn.id)}
+                            disabled={formData.assigned_to_departments.length > 0}
+                            className="w-4 h-4 text-blue-500 bg-slate-700 border-slate-500 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <span className={`text-sm ${formData.assigned_to_departments.length > 0 ? 'text-slate-500' : 'text-white'}`}>
+                            {jpn.name} ({jpn.state})
+                          </span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -440,7 +611,7 @@ export default function CreateSyorPage() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-blue-200 font-semibold mb-1">Nota:</p>
-                  <p className="text-sm text-blue-300">Pilih sama ada Bahagian atau JPN untuk syor ini. Anda tidak boleh pilih kedua-duanya.</p>
+                  <p className="text-sm text-blue-300">Anda boleh pilih <strong>MULTIPLE (lebih daripada satu)</strong> Bahagian atau JPN untuk syor ini. Pilih sama ada Bahagian ATAU JPN sahaja, bukan kedua-duanya.</p>
                 </div>
               </div>
             </div>

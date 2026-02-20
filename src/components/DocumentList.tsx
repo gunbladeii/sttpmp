@@ -54,7 +54,7 @@ export default function DocumentList({ documents, onDocumentDeleted, canDelete }
         return;
       }
 
-      const response = await fetch(`/api/upload-document?documentId=${documentId}`, {
+      const response = await fetch(`/api/upload-document?documentId=${documentId}&userEmail=${encodeURIComponent(user.email)}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

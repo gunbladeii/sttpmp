@@ -7,12 +7,13 @@ INSERT INTO departments (name, code, contact_person, email, phone) VALUES
 ('Bahagian Pembangunan Kurikulum', 'BPK', 'Raj Kumar s/o Krishnan', 'raj.kumar@moe.gov.my', '03-88841236'),
 ('Bahagian Teknologi Pendidikan', 'BTP', 'Lim Wei Ming', 'lim.weiming@moe.gov.my', '03-88841237');
 
--- Insert sample JPN
+-- Insert sample JPN (updated: removed duplicate KL, using W.P naming)
 INSERT INTO jpn (name, state, contact_person, email, phone, address) VALUES
 ('JPN Selangor', 'Selangor', 'Datuk Mohd Yusof', 'yusof@jpnselangor.gov.my', '03-55121234', 'Kompleks JPN Selangor, Shah Alam'),
-('JPN Kuala Lumpur', 'Kuala Lumpur', 'Datin Sarah Abdullah', 'sarah@jpnkl.gov.my', '03-26921234', 'Kompleks JPN KL, Jalan Duta'),
+('JPN W.P Kuala Lumpur', 'W.P Kuala Lumpur', 'Datin Sarah Abdullah', 'sarah@jpnkl.gov.my', '03-26921234', 'Kompleks JPN KL, Jalan Duta'),
 ('JPN Johor', 'Johor', 'Encik Raman Krishnan', 'raman@jpnjohor.gov.my', '07-22431234', 'Kompleks JPN Johor, Johor Bahru'),
-('JPN Penang', 'Pulau Pinang', 'Puan Lim Ai Choo', 'aichoo@jpnpenang.gov.my', '04-22881234', 'Kompleks JPN Penang, Georgetown');
+('JPN Penang', 'Pulau Pinang', 'Puan Lim Ai Choo', 'aichoo@jpnpenang.gov.my', '04-22881234', 'Kompleks JPN Penang, Georgetown')
+ON CONFLICT (name) DO NOTHING;
 
 -- Insert sample users (updated with correct roles)
 INSERT INTO users (email, name, role, department_id, jpn_id, is_active, is_approved) VALUES
@@ -22,7 +23,7 @@ INSERT INTO users (email, name, role, department_id, jpn_id, is_active, is_appro
 ('siti.aminah@moe.gov.my', 'Siti Aminah binti Ali', 'penyelaras_bahagian', (SELECT id FROM departments WHERE code = 'BPR'), NULL, true, true),
 ('raj.kumar@moe.gov.my', 'Raj Kumar s/o Krishnan', 'penyelaras_bahagian', (SELECT id FROM departments WHERE code = 'BPK'), NULL, true, true),
 ('jpn.selangor@moe.gov.my', 'Penyelaras JPN Selangor', 'penyelaras_jpn', NULL, (SELECT id FROM jpn WHERE state = 'Selangor'), true, true),
-('jpn.kl@moe.gov.my', 'Penyelaras JPN KL', 'penyelaras_jpn', NULL, (SELECT id FROM jpn WHERE state = 'Kuala Lumpur'), true, true),
+('jpn.kl@moe.gov.my', 'Penyelaras JPN KL', 'penyelaras_jpn', NULL, (SELECT id FROM jpn WHERE state = 'W.P Kuala Lumpur'), true, true),
 ('pemantau@moe.gov.my', 'Pemantau Sistem', 'pemantau', NULL, NULL, true, true);
 
 -- Insert sample syor (updated with required fields)

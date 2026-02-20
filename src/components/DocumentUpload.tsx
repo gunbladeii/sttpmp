@@ -44,6 +44,7 @@ export default function DocumentUpload({ syorId, onUploadSuccess, disabled }: Do
       const formData = new FormData();
       formData.append('file', file);
       formData.append('syorId', syorId);
+      formData.append('userEmail', user.email); // Send user email for auth
 
       const response = await fetch('/api/upload-document', {
         method: 'POST',
