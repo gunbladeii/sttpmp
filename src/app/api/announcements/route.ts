@@ -3,6 +3,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
+// ⚡ INCREASE BODY SIZE LIMIT FOR MULTIPLE IMAGES
+// Default Next.js limit is ~4.5MB which is too small for announcements with multiple images
+// Multiple base64 images from TipTap editor can easily exceed this limit
+export const maxDuration = 60; // Max execution time: 60 seconds
+export const dynamic = 'force-dynamic'; // Disable caching
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

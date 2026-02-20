@@ -37,6 +37,15 @@ const nextConfig: NextConfig = {
     unoptimized: false,
   },
   
+  // ⚡ INCREASE BODY SIZE LIMIT FOR ANNOUNCEMENTS WITH MULTIPLE IMAGES
+  // Default Next.js limit is 4.5MB which is too small for TipTap content with base64 images
+  // This allows announcements with multiple screenshots/images
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb', // Increased from default 1mb to 10mb
+    },
+  },
+  
   // Security headers to mitigate CVE-2025-55182
   async headers() {
     return [
