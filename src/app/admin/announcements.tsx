@@ -492,6 +492,15 @@ export default function AdminAnnouncementsPage() {
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
+        .prose img {
+          max-width: 100% !important;
+          max-height: 200px !important;
+          height: auto !important;
+          border-radius: 8px;
+          margin: 0.5em auto;
+          display: block;
+          object-fit: contain;
+        }
         .prose {
           color: #1f2937 !important;
         }
