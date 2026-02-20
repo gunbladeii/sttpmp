@@ -25,6 +25,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.imgur.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imgur.com',
+      },
     ],
     unoptimized: false,
   },
@@ -69,7 +77,9 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google.com https://www.gstatic.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https: blob:",
+              process.env.NODE_ENV === 'development' 
+                ? "img-src 'self' data: https: http: blob:" 
+                : "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.brevo.com",
               "frame-src 'self' https://www.google.com",
@@ -77,8 +87,8 @@ const nextConfig: NextConfig = {
               "base-uri 'self'",
               "form-action 'self'",
               "frame-ancestors 'self'",
-              "upgrade-insecure-requests"
-            ].join('; ')
+              process.env.NODE_ENV === 'production' ? "upgrade-insecure-requests" : ""
+            ].filter(Boolean).join('; ')
           }
         ],
       },

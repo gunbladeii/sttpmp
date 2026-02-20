@@ -77,9 +77,22 @@ export default function AdminAnnouncementsPage() {
 
   // Helper functions
   const extractFirstImage = (html: string) => {
-    const imgRegex = /<img[^>]+src="([^">]+)"/;
-    const match = html.match(imgRegex);
-    return match ? match[1] : null;
+    // Try multiple patterns to handle different HTML formats
+    const patterns = [
+      /<img[^>]+src=["']([^"'>]+)["']/i,  // Standard: src="URL" or src='URL'
+      /<img[^>]+src=([^\s>]+)/i,           // No quotes: src=URL
+    ];
+    
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match && match[1]) {
+        console.log('✅ Image extracted from HTML:', match[1]);
+        return match[1];
+      }
+    }
+    
+    console.warn('⚠️ No image found in HTML:', html.substring(0, 200));
+    return null;
   };
 
   const removeImages = (html: string) => {
@@ -259,24 +272,35 @@ export default function AdminAnnouncementsPage() {
                   const previewText = truncateText(contentWithoutImages, 120);
                   const needsTruncation = stripHtml(contentWithoutImages).length > 120;
                   
+                  // Debug: Log image URL extraction
+                  if (imageUrl) {
+                    console.log('📸 Admin announcement image URL:', { title: a.title, imageUrl });
+                  }
+                  
                   return (
-                    <div key={a.id} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden h-64">
-                      <div className="flex gap-4 h-full p-5">
+                    <div key={a.id} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden h-48">
+                      <div className="flex gap-4 h-full p-4">
                         {/* Image Section - Fixed size */}
                         {imageUrl && (
-                          <div className="w-48 h-full relative flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                          <div className="w-36 h-full relative flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                             <img
                               src={imageUrl}
                               alt={a.title}
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                console.error('❌ Image failed to load:', imageUrl);
+                                e.currentTarget.style.display = 'none';
+                              }}
+                              onLoad={() => console.log('✅ Image loaded:', imageUrl)}
+                              crossOrigin="anonymous"
                             />
                           </div>
                         )}
                         
                         {/* Content Section */}
                         <div className="flex-1 flex flex-col min-h-0">
-                          <div className="flex items-start justify-between gap-4 mb-3">
-                            <h4 className="font-bold text-xl text-gray-900 line-clamp-2 flex-1">{a.title}</h4>
+                          <div className="flex items-start justify-between gap-4 mb-2">
+                            <h4 className="font-bold text-lg text-gray-900 line-clamp-2 flex-1">{a.title}</h4>
                             <span className={`px-3 py-1 rounded-full font-medium text-xs whitespace-nowrap ${
                               a.published 
                                 ? 'bg-green-100 text-green-700 border border-green-300' 
@@ -286,8 +310,8 @@ export default function AdminAnnouncementsPage() {
                             </span>
                           </div>
                           
-                          <div className="text-gray-700 text-sm leading-relaxed mb-3 flex-1 overflow-hidden">
-                            <p className="line-clamp-3">{previewText}</p>
+                          <div className="text-gray-700 text-sm leading-relaxed mb-2 flex-1 overflow-hidden">
+                            <p className="line-clamp-2">{previewText}</p>
                             {needsTruncation && (
                               <button
                                 onClick={() => setSelectedAnnouncement(a)}
@@ -302,21 +326,21 @@ export default function AdminAnnouncementsPage() {
                           </div>
                           
                           {/* Action Buttons */}
-                          <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-200 mt-auto">
+                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-gray-200 mt-auto">
                             <button 
-                              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm rounded-lg font-medium transition-colors shadow-md flex items-center gap-1.5" 
+                              className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded-lg font-medium transition-colors shadow-sm flex items-center gap-1" 
                               onClick={() => startEdit(a)}
                             >
                               ✏️ Edit
                             </button>
                             <button 
-                              className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg font-medium transition-colors shadow-md flex items-center gap-1.5" 
+                              className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded-lg font-medium transition-colors shadow-sm flex items-center gap-1" 
                               onClick={() => handleDelete(a.id)}
                             >
                               🗑️ Padam
                             </button>
                             <button 
-                              className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors shadow-md flex items-center gap-1.5 ${
+                              className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-colors shadow-sm flex items-center gap-1 ${
                                 a.published 
                                   ? 'bg-gray-500 hover:bg-gray-600 text-white' 
                                   : 'bg-green-600 hover:bg-green-700 text-white'
@@ -406,13 +430,14 @@ export default function AdminAnnouncementsPage() {
 
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-              {/* Image if exists */}
+              {/* Image if exists - MINIMAL SIZE */}
               {selectedAnnouncement.image_url && (
-                <div className="mb-6 rounded-lg overflow-hidden">
+                <div className="mb-3 rounded-lg overflow-hidden flex justify-center bg-gray-50">
                   <img
                     src={selectedAnnouncement.image_url}
                     alt={selectedAnnouncement.title}
-                    className="w-full h-auto max-h-96 object-contain bg-gray-100"
+                    style={{ maxWidth: '200px', maxHeight: '80px', objectFit: 'contain' }}
+                    className="rounded-lg"
                   />
                 </div>
               )}

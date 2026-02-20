@@ -17,9 +17,22 @@ const AnnouncementBox: React.FC = () => {
 
   // Extract first image from HTML content
   const extractFirstImage = (html: string) => {
-    const imgRegex = /<img[^>]+src="([^">]+)"/;
-    const match = html.match(imgRegex);
-    return match ? match[1] : null;
+    // Try multiple patterns to handle different HTML formats
+    const patterns = [
+      /<img[^>]+src=["']([^"'>]+)["']/i,  // Standard: src="URL" or src='URL'
+      /<img[^>]+src=([^\s>]+)/i,           // No quotes: src=URL
+    ];
+    
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match && match[1]) {
+        console.log('✅ Image extracted from HTML:', match[1]);
+        return match[1];
+      }
+    }
+    
+    console.warn('⚠️ No image found in HTML:', html.substring(0, 200));
+    return null;
   };
 
   // Remove all images from HTML content
@@ -130,31 +143,42 @@ const AnnouncementBox: React.FC = () => {
               const previewText = truncateText(contentWithoutImages, 150);
               const needsTruncation = stripHtml(contentWithoutImages).length > 150;
               
+              // Debug: Log image URL extraction
+              if (imageUrl) {
+                console.log('📸 Announcement image URL:', { title: a.title, imageUrl });
+              }
+              
               return (
               <div 
                 key={a.id} 
-                className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 p-4 md:p-5 min-h-[16rem] md:h-64"
+                className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 p-4 min-h-[12rem] md:h-48"
               >
                 <div className="flex flex-col sm:flex-row gap-4 h-full">
                   {/* Image Section - Responsive size */}
                   {imageUrl && (
-                    <div className="w-full sm:w-40 md:w-48 h-48 sm:h-full relative flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                    <div className="w-full sm:w-32 md:w-36 h-32 sm:h-full relative flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                       <img
                         src={imageUrl}
                         alt={a.title}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('❌ Image failed to load:', imageUrl);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                        onLoad={() => console.log('✅ Image loaded:', imageUrl)}
+                        crossOrigin="anonymous"
                       />
                     </div>
                   )}
                   
                   {/* Content Section */}
                   <div className="flex-1 flex flex-col min-h-0">
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 leading-tight mb-3 line-clamp-2">
+                    <h3 className="text-lg md:text-xl font-bold text-gray-900 leading-tight mb-2 line-clamp-2">
                       {a.title}
                     </h3>
                     
-                    <div className="text-gray-800 text-sm leading-relaxed mb-3 flex-1 overflow-hidden">
-                      <p className="line-clamp-3">{previewText}</p>
+                    <div className="text-gray-800 text-sm leading-relaxed mb-2 flex-1 overflow-hidden">
+                      <p className="line-clamp-2">{previewText}</p>
                       {needsTruncation && (
                         <button
                           onClick={() => setSelectedAnnouncement(a)}
@@ -168,9 +192,9 @@ const AnnouncementBox: React.FC = () => {
                       )}
                     </div>
                     
-                    <div className="flex items-center pt-3 border-t border-gray-200 mt-auto">
-                      <span className="text-sm text-gray-700 flex items-center gap-2" style={{ color: '#374151' }}>
-                        <span className="text-lg">📅</span>
+                    <div className="flex items-center pt-2 border-t border-gray-200 mt-auto">
+                      <span className="text-xs text-gray-700 flex items-center gap-2" style={{ color: '#374151' }}>
+                        <span className="text-base">📅</span>
                         {new Date(a.created_at).toLocaleDateString('ms-MY', { 
                           day: '2-digit', 
                           month: 'long', 
@@ -249,13 +273,13 @@ const AnnouncementBox: React.FC = () => {
 
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-              {/* Image if exists */}
+              {/* Image if exists - SMALL SIZE */}
               {selectedAnnouncement.image_url && (
-                <div className="mb-6 rounded-lg overflow-hidden">
+                <div className="mb-4 rounded-lg overflow-hidden flex justify-center bg-gray-50">
                   <img
                     src={selectedAnnouncement.image_url}
                     alt={selectedAnnouncement.title}
-                    className="w-full h-auto max-h-96 object-contain bg-gray-100"
+                    className="max-w-sm h-auto max-h-40 object-contain rounded-lg"
                   />
                 </div>
               )}
@@ -291,9 +315,12 @@ const AnnouncementBox: React.FC = () => {
       <style jsx global>{`
         .prose img {
           max-width: 100% !important;
+          max-height: 200px !important;
           height: auto !important;
           border-radius: 8px;
-          margin: 1em 0;
+          margin: 0.5em auto;
+          display: block;
+          object-fit: contain;
         }
         .prose {
           color: #1f2937 !important;
