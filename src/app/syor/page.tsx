@@ -242,33 +242,33 @@ export default function SyorList() {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold cloudpeak-title mb-3">Pengurusan Syor</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold cloudpeak-title mb-3">Pengurusan Perakuan Menteri</h1>
               <div className="mt-2 space-y-2">
                 <p className="text-slate-300 text-sm sm:text-base md:text-lg">Urus saranan dan maklum balas</p>
                 {user?.role === 'penyelaras_bahagian' && userDetails?.department && (
                   <p className="text-sm text-blue-400 font-medium bg-blue-500/10 px-3 py-1 rounded-full inline-block">
-                    📋 Melihat syor untuk Bahagian: <span className="font-bold">{userDetails.department.name}</span>
+                    📋 Melihat Perakuan Menteri untuk Bahagian: <span className="font-bold">{userDetails.department.name}</span>
                   </p>
                 )}
                 {user?.role === 'penyelaras_jpn' && userDetails?.jpn && (
                   <p className="text-sm text-green-400 font-medium bg-green-500/10 px-3 py-1 rounded-full inline-block">
-                    🏢 Melihat syor untuk JPN: <span className="font-bold">{userDetails.jpn.name}, {userDetails.jpn.state}</span>
+                    🏢 Melihat Perakuan Menteri untuk JPN: <span className="font-bold">{userDetails.jpn.name}, {userDetails.jpn.state}</span>
                   </p>
                 )}
                 {user?.role === 'penyelaras_jnn' && userDetails?.jpn && (
                   <p className="text-sm text-teal-400 font-medium bg-teal-500/10 px-3 py-1 rounded-full inline-block">
-                    🏢 Melihat syor untuk JPN: <span className="font-bold">{userDetails.jpn.name}, {userDetails.jpn.state}</span>
+                    🏢 Melihat Perakuan Menteri untuk JPN: <span className="font-bold">{userDetails.jpn.name}, {userDetails.jpn.state}</span>
                     <span className="ml-2 text-xs">(VIEW ONLY)</span>
                   </p>
                 )}
                 {user?.role === 'peneraju_pemeriksaan' && userDetails?.sector && (
                   <p className="text-sm text-purple-400 font-medium bg-purple-500/10 px-3 py-1 rounded-full inline-block">
-                    🎯 Melihat syor untuk Sektor: <span className="font-bold">{userDetails.sector}</span>
+                    🎯 Melihat Perakuan Menteri untuk Sektor: <span className="font-bold">{userDetails.sector}</span>
                   </p>
                 )}
                 {user?.role === 'admin' && (
                   <p className="text-sm text-red-400 font-medium bg-red-500/10 px-3 py-1 rounded-full inline-block">
-                    👑 Akses Admin - Melihat semua syor
+                    👑 Akses Admin - Melihat semua Perakuan Menteri
                   </p>
                 )}
                 {user?.role === 'pemantau' && (
@@ -548,27 +548,27 @@ export default function SyorList() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">No syor found</h3>
+              <h3 className="text-xl font-bold text-white mb-3">Tiada Perakuan Menteri dijumpai</h3>
               <p className="text-slate-300 mb-6">
                 {user?.role === 'penyelaras_bahagian' && userDetails?.department
-                  ? `Tiada syor yang ditetapkan kepada ${userDetails.department.name} lagi.`
+                  ? `Tiada Perakuan Menteri yang ditetapkan kepada ${userDetails.department.name} lagi.`
                   : user?.role === 'penyelaras_jpn' && userDetails?.jpn
-                  ? `Tiada syor yang ditetapkan kepada ${userDetails.jpn.name} lagi.`
+                  ? `Tiada Perakuan Menteri yang ditetapkan kepada ${userDetails.jpn.name} lagi.`
                   : user?.role === 'peneraju_pemeriksaan' && userDetails?.sector
-                  ? `Tiada syor untuk sektor ${userDetails.sector} lagi.`
-                  : 'Tiada syor yang sepadan dengan penapis semasa.'
+                  ? `Tiada Perakuan Menteri untuk sektor ${userDetails.sector} lagi.`
+                  : 'Tiada Perakuan Menteri yang sepadan dengan penapis semasa.'
                 }
               </p>
               {(user?.role === 'penyelaras_bahagian' || user?.role === 'penyelaras_jpn' || user?.role === 'peneraju_pemeriksaan') && (
                 <div className="cloudpeak-card p-6 max-w-lg mx-auto">
                   <p className="text-sm text-blue-300">
-                    💡 <strong>Nota:</strong> Anda hanya dapat melihat syor yang ditetapkan kepada {
+                    💡 <strong>Nota:</strong> Anda hanya dapat melihat Perakuan Menteri yang ditetapkan kepada {
                       user.role === 'penyelaras_bahagian' && userDetails?.department ? userDetails.department.name :
                       user.role === 'penyelaras_jpn' && userDetails?.jpn ? `${userDetails.jpn.name}, ${userDetails.jpn.state}` :
                       user.role === 'peneraju_pemeriksaan' && userDetails?.sector ? `sektor ${userDetails.sector}` :
                       'unit anda'
                     }. 
-                    Hubungi admin jika anda memerlukan akses kepada syor lain.
+                    Hubungi admin jika anda memerlukan akses kepada Perakuan Menteri lain.
                   </p>
                 </div>
               )}

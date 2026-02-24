@@ -585,7 +585,7 @@ export default function SyorDetailsPage() {
   // Delete syor handler (admin-only)
   const handleDeleteSyor = async () => {
     if (!user || !syor || user.role !== 'admin') {
-      setError('Hanya admin boleh memadam syor')
+      setError('Hanya admin boleh memadam Perakuan Menteri')
       return
     }
 
@@ -606,13 +606,13 @@ export default function SyorDetailsPage() {
 
       if (!response.ok) {
         console.error('❌ Delete failed:', result)
-        throw new Error(result.error || 'Gagal memadam syor')
+        throw new Error(result.error || 'Gagal memadam Perakuan Menteri')
       }
 
       console.log('✅ Syor deleted successfully:', result)
       
       // Redirect to syor list page after successful deletion
-      setSuccess('Syor berjaya dipadam! Mengalihkan ke senarai syor...')
+      setSuccess('Perakuan Menteri berjaya dipadam! Mengalihkan ke senarai Perakuan Menteri...')
       setTimeout(() => {
         router.push('/syor')
       }, 1500)
@@ -620,7 +620,7 @@ export default function SyorDetailsPage() {
     } catch (err) {
       console.error('❌ Delete syor error:', err)
       const errorMessage = err instanceof Error ? err.message : 'Ralat tidak diketahui'
-      setError(`Ralat memadam syor: ${errorMessage}`)
+      setError(`Ralat memadam Perakuan Menteri: ${errorMessage}`)
       setShowDeleteConfirm(false)
       setIsDeleting(false)
     }
@@ -675,7 +675,7 @@ export default function SyorDetailsPage() {
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
           <p className="text-slate-300 text-lg">
-            {authLoading ? 'Mengesahkan pengguna...' : 'Memuat butiran syor...'}
+            {authLoading ? 'Mengesahkan pengguna...' : 'Memuat butiran Perakuan Menteri...'}
           </p>
         </div>
       </div>
@@ -742,9 +742,9 @@ export default function SyorDetailsPage() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                Kembali ke Senarai Syor
+                Kembali ke Senarai Perakuan Menteri
               </button>
-              <h1 className="text-4xl font-bold cloudpeak-title mb-3">Butiran Syor</h1>
+              <h1 className="text-4xl font-bold cloudpeak-title mb-3">Butiran Perakuan Menteri</h1>
               <p className="text-slate-300 text-lg">
                 Dicipta pada {formatDate(syor.created_at)} oleh {syor.creator?.name}
               </p>
@@ -758,16 +758,16 @@ export default function SyorDetailsPage() {
                       onClick={() => setIsEditing(true)}
                       className="cloudpeak-button px-6 py-3 rounded-lg font-medium transition-all transform hover:scale-105"
                     >
-                      Edit Syor
+                      Edit Perakuan Menteri
                     </button>
                     {/* Admin-only delete button */}
                     {user?.role === 'admin' && (
                       <button
                         onClick={() => setShowDeleteConfirm(true)}
                         className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all transform hover:scale-105"
-                        title="Hanya admin boleh memadam syor"
+                        title="Hanya admin boleh memadam Perakuan Menteri"
                       >
-                        🗑️ Padam Syor
+                        🗑️ Padam Perakuan Menteri
                       </button>
                     )}
                   </>
@@ -1259,19 +1259,19 @@ export default function SyorDetailsPage() {
             
             <div className="mb-6">
               <p className="text-slate-300 mb-2">
-                Adakah anda pasti untuk memadam syor ini?
+                Adakah anda pasti untuk memadam Perakuan Menteri ini?
               </p>
               <p className="text-sm text-red-400 font-medium">
                 ⚠️ Tindakan ini tidak boleh dibatalkan!
               </p>
               <div className="mt-4 p-3 bg-slate-700/50 rounded-lg border border-slate-600">
-                <p className="text-sm text-slate-400">Syor yang akan dipadam:</p>
+                <p className="text-sm text-slate-400">Perakuan Menteri yang akan dipadam:</p>
                 <p className="text-white font-medium mt-1">{syor?.title}</p>
               </div>
               <div className="mt-3 text-xs text-slate-400">
                 <p>Data yang akan dipadam:</p>
                 <ul className="list-disc list-inside ml-2 mt-1">
-                  <li>Syor ini</li>
+                  <li>Perakuan Menteri ini</li>
                   <li>Semua sejarah tindakan</li>
                   <li>Semua notifikasi berkaitan</li>
                   <li>Semua dokumen berkaitan</li>

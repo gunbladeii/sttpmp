@@ -254,7 +254,7 @@ export default function CreateSyorPage() {
       }
       
       if (!formData.syor_content.trim()) {
-        throw new Error('Kandungan syor diperlukan')
+        throw new Error('Kandungan Perakuan Menteri diperlukan')
       }
       
       // Updated validation for multiple assignments
@@ -405,13 +405,13 @@ export default function CreateSyorPage() {
         </div>
 
         <div className="mb-8">
-          <h1 className="cloudpeak-title">Cipta Syor Baharu</h1>
-          <p className="mt-3 text-slate-300 text-lg">Cipta syor perakuan menteri untuk bahagian atau JPN</p>
+          <h1 className="cloudpeak-title">Cipta Perakuan Menteri Baharu</h1>
+          <p className="mt-3 text-slate-300 text-lg">Cipta Perakuan Menteri untuk bahagian atau JPN</p>
         </div>
 
         <div className="cloudpeak-card">
           <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 border-b border-slate-700 border-opacity-30">
-            <h2 className="text-xl font-medium text-white">Maklumat Syor</h2>
+            <h2 className="text-xl font-medium text-white">Maklumat Perakuan Menteri</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
@@ -611,7 +611,7 @@ export default function CreateSyorPage() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-blue-200 font-semibold mb-1">Nota:</p>
-                  <p className="text-sm text-blue-300">Anda boleh pilih <strong>MULTIPLE (lebih daripada satu)</strong> Bahagian atau JPN untuk syor ini. Pilih sama ada Bahagian ATAU JPN sahaja, bukan kedua-duanya.</p>
+                  <p className="text-sm text-blue-300">Anda boleh pilih <strong>MULTIPLE (lebih daripada satu)</strong> Bahagian atau JPN untuk Perakuan Menteri ini. Pilih sama ada Bahagian ATAU JPN sahaja, bukan kedua-duanya.</p>
                 </div>
               </div>
             </div>
@@ -626,11 +626,11 @@ export default function CreateSyorPage() {
                 onChange={handleInputChange}
                 rows={8}
                 className="w-full px-4 py-3 border border-slate-600 bg-slate-800 bg-opacity-50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-vertical"
-                placeholder="Masukkan kandungan lengkap syor yang akan dihantar kepada bahagian/JPN yang dipilih..."
+                placeholder="Masukkan kandungan lengkap Perakuan Menteri yang akan dihantar kepada bahagian/JPN yang dipilih..."
                 required
               />
               <p className="text-xs text-slate-400 mt-2">
-                Masukkan kandungan lengkap syor yang akan dihantar kepada bahagian/JPN yang dipilih.
+                Masukkan kandungan lengkap Perakuan Menteri yang akan dihantar kepada bahagian/JPN yang dipilih.
               </p>
             </div>
 
@@ -728,7 +728,7 @@ export default function CreateSyorPage() {
                     Mencipta...
                   </div>
                 ) : (
-                  'Cipta Syor'
+                  'Cipta Perakuan Menteri'
                 )}
               </button>
             </div>

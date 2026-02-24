@@ -446,8 +446,8 @@ export default function DashboardLaporan() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-slate-300">Tiada syor yang tertunda ketika ini</p>
-              <p className="text-slate-400 text-sm mt-2">Semua syor dalam keadaan baik</p>
+              <p className="text-slate-300">Tiada Perakuan Menteri yang tertunda ketika ini</p>
+              <p className="text-slate-400 text-sm mt-2">Semua Perakuan Menteri dalam keadaan baik</p>
             </div>
           )}
         </div>

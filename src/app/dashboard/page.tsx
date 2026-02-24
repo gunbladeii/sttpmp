@@ -9,7 +9,7 @@ import DashboardHeader from '@/components/DashboardHeader'
 import type { Syor, StatusTracking, DashboardStats } from '@/types'
 import { getStatusColor, getStatusText } from '@/lib/utils'
 
-// Modal component for showing syor list by status
+// Modal component for showing Perakuan Menteri list by status
 interface SyorModalProps {
   isOpen: boolean
   onClose: () => void
@@ -37,7 +37,7 @@ function SyorModal({ isOpen, onClose, title, syorList, status }: SyorModalProps)
         </div>
         <div className="p-4 sm:p-6 overflow-y-auto max-h-[70vh] sm:max-h-[60vh]">
           {syorList.length === 0 ? (
-            <p className="text-slate-400 text-center py-8">Tiada syor dengan status ini</p>
+            <p className="text-slate-400 text-center py-8">Tiada Perakuan Menteri dengan status ini</p>
           ) : (
             <div className="space-y-4">
               {syorList.map((syor) => {
@@ -50,7 +50,7 @@ function SyorModal({ isOpen, onClose, title, syorList, status }: SyorModalProps)
                   : []
                 const latestStatus = sortedStatusTracking[0] || null
                 
-                // Calculate deadline urgency (same logic as syor page)
+                // Calculate deadline urgency (same logic as Perakuan Menteri page)
                 const today = new Date()
                 const responseDeadline = syor.response_deadline ? new Date(syor.response_deadline) : null
                 
@@ -157,8 +157,8 @@ export default function Dashboard() {
   const { user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [syorList, setSyorList] = useState<Record<string, unknown>[]>([]) // Temporary fix for types
-  const [recentSyor, setRecentSyor] = useState<any[]>([]) // Recent syor for dashboard
-  const [allSyor, setAllSyor] = useState<any[]>([]) // Store all syor for filtering
+  const [recentSyor, setRecentSyor] = useState<any[]>([]) // Recent Perakuan Menteri for dashboard
+  const [allSyor, setAllSyor] = useState<any[]>([]) // Store all Perakuan Menteri for filtering
   const [userDetails, setUserDetails] = useState<any>(null) // Store user with department/JPN details
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -210,7 +210,7 @@ export default function Dashboard() {
     })
   }
 
-  // Function to handle syor item click
+  // Function to handle Perakuan Menteri item click
   const handleSyorClick = (syorId: string) => {
     router.push(`/syor/${syorId}`)
   }
@@ -233,7 +233,7 @@ export default function Dashboard() {
           setUserDetails(user as any)
         }
 
-        // Build query based on user's role for syor
+        // Build query based on user's role for Perakuan Menteri
         let syorQuery = supabase
           .from('syor')
           .select(`
@@ -248,7 +248,7 @@ export default function Dashboard() {
             )
           `)
 
-        // Apply role-based filtering for syor
+        // Apply role-based filtering for Perakuan Menteri
         if (user?.role === 'penyelaras_bahagian' && user?.department_id) {
           // Filter via status_tracking.department_id instead of deprecated column
           const { data: syorIds } = await supabase
@@ -278,7 +278,7 @@ export default function Dashboard() {
             syorQuery = null as any
           }
         } else if (user?.role === 'peneraju_pemeriksaan' && user?.sector) {
-          // Peneraju Pemeriksaan: see syor created by users in their sector
+          // Peneraju Pemeriksaan: see Perakuan Menteri created by users in their sector
           const { data: usersInSector } = await supabase
             .from('users')
             .select('id')
@@ -299,7 +299,7 @@ export default function Dashboard() {
 
         if (syorError) throw syorError
 
-        // Also fetch ALL syor data for modal (without limit)
+        // Also fetch ALL Perakuan Menteri data for modal (without limit)
         let allSyorQuery = supabase
           .from('syor')
           .select(`
@@ -314,7 +314,7 @@ export default function Dashboard() {
             )
           `)
 
-        // Apply same role-based filtering for all syor
+        // Apply same role-based filtering for all Perakuan Menteri
         if (user?.role === 'penyelaras_bahagian' && user?.department_id) {
           const { data: syorIds } = await supabase
             .from('status_tracking')
@@ -474,7 +474,7 @@ export default function Dashboard() {
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold cloudpeak-title mb-3">Dashboard STRiKe</h1>
           <div className="mt-2 space-y-1">
-            <p className="text-slate-300 text-sm sm:text-base md:text-lg">Dashboard sistem pemantauan syor dan maklum balas syor</p>
+            <p className="text-slate-300 text-sm sm:text-base md:text-lg">Dashboard sistem pemantauan Perakuan Menteri dan maklum balas</p>
             {user?.role === 'penyelaras_bahagian' && userDetails?.department && (
               <p className="text-sm text-blue-400 font-medium bg-blue-500/10 px-3 py-1 rounded-full inline-block">
                 📋 Dashboard untuk Bahagian: <span className="font-bold">{userDetails.department.name}</span>
@@ -520,7 +520,7 @@ export default function Dashboard() {
             {/* Total Syor */}
             <div 
               className="cloudpeak-card p-3 sm:p-4 md:p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
-              onClick={() => handleScoreCardClick('all', 'Semua Syor')}
+              onClick={() => handleScoreCardClick('all', 'Semua Perakuan Menteri')}
             >
               <div className="flex flex-col items-center text-center">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg mb-2">
@@ -536,7 +536,7 @@ export default function Dashboard() {
             {/* Selesai */}
             <div 
               className="cloudpeak-card p-3 sm:p-4 md:p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
-              onClick={() => handleScoreCardClick('selesai', 'Senarai Syor Selesai')}
+              onClick={() => handleScoreCardClick('selesai', 'Senarai Perakuan Menteri Selesai')}
             >
               <div className="flex flex-col items-center text-center">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg mb-2">
@@ -552,7 +552,7 @@ export default function Dashboard() {
             {/* Dalam Tindakan */}
             <div 
               className="cloudpeak-card p-3 sm:p-4 md:p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
-              onClick={() => handleScoreCardClick('dalam_tindakan', 'Senarai Syor Dalam Tindakan')}
+              onClick={() => handleScoreCardClick('dalam_tindakan', 'Senarai Perakuan Menteri Dalam Tindakan')}
             >
               <div className="flex flex-col items-center text-center">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg mb-2">
@@ -568,7 +568,7 @@ export default function Dashboard() {
             {/* Belum diambil tindakan */}
             <div 
               className="cloudpeak-card p-3 sm:p-4 md:p-6 cursor-pointer hover:bg-slate-700/30 transition-colors"
-              onClick={() => handleScoreCardClick('belum_selesai', 'Senarai Syor Belum diambil tindakan')}
+              onClick={() => handleScoreCardClick('belum_selesai', 'Senarai Perakuan Menteri Belum diambil tindakan')}
             >
               <div className="flex flex-col items-center text-center">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg mb-2">
@@ -622,7 +622,7 @@ export default function Dashboard() {
           <div className="lg:col-span-2">
             <div className="cloudpeak-card">
               <div className="px-6 py-4 border-b border-slate-600">
-                <h3 className="text-xl font-bold text-white">Syor Terkini</h3>
+                <h3 className="text-xl font-bold text-white">Perakuan Menteri Terkini</h3>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
@@ -731,15 +731,15 @@ export default function Dashboard() {
                     </div>
                     <p className="text-slate-300 mb-2">
                       {user?.role === 'penyelaras_bahagian' 
-                        ? 'No syor assigned to your department yet.'
+                        ? 'Tiada Perakuan Menteri ditugaskan kepada bahagian anda lagi.'
                         : user?.role === 'penyelaras_jpn'
-                        ? 'No syor assigned to your JPN yet.'
-                        : 'No syor found.'
+                        ? 'Tiada Perakuan Menteri ditugaskan kepada JPN anda lagi.'
+                        : 'Tiada Perakuan Menteri dijumpai.'
                       }
                     </p>
                     {(user?.role === 'penyelaras_bahagian' || user?.role === 'penyelaras_jpn') && (
                       <p className="text-xs text-slate-400">
-                        You can only view syor assigned to your {user.role === 'penyelaras_bahagian' ? 'department' : 'JPN'}.
+                        Anda hanya boleh melihat Perakuan Menteri yang ditugaskan kepada {user.role === 'penyelaras_bahagian' ? 'bahagian' : 'JPN'} anda.
                       </p>
                     )}
                   </div>
