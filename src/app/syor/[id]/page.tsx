@@ -428,20 +428,6 @@ export default function SyorDetailsPage() {
       if (canEditTindakan && formData.tindakan_comments.trim()) {
         const statusEnum = ['belum_selesai', 'dalam_tindakan', 'selesai']
         const safeStatus = statusEnum.includes(formData.tindakan_status) ? formData.tindakan_status : 'belum_selesai'
-        
-        // Find existing status_tracking record for this user's department/jpn
-        const existingRecordQuery = supabase
-          .from('status_tracking')
-          .select('id')
-          .eq('syor_id', syorId)
-        
-        if (user.role === 'penyelaras_bahagian') {
-          existingRecordQuery.eq('department_id', user.department_id)
-        } else if (user.role === 'penyelaras_jpn') {
-          existingRecordQuery.eq('jpn_id', user.jpn_id)
-        }
-        
-        const { data: existingRecord } = await existingRecordQuery.maybeSingle()
 
         const statusData = {
           status: safeStatus,
@@ -451,27 +437,17 @@ export default function SyorDetailsPage() {
           updated_at: new Date().toISOString()
         }
 
-        if (existingRecord) {
-          // UPDATE existing record
-          const { error: statusError } = await supabase
-            .from('status_tracking')
-            .update(statusData)
-            .eq('id', existingRecord.id)
+        // Always INSERT a new record to preserve full history trail
+        const { error: statusError } = await supabase
+          .from('status_tracking')
+          .insert([{
+            syor_id: syorId,
+            department_id: user.role === 'penyelaras_bahagian' ? user.department_id : null,
+            jpn_id: user.role === 'penyelaras_jpn' ? user.jpn_id : null,
+            ...statusData
+          }])
 
-          if (statusError) throw statusError
-        } else {
-          // INSERT new record (first time responding)
-          const { error: statusError } = await supabase
-            .from('status_tracking')
-            .insert([{
-              syor_id: syorId,
-              department_id: user.role === 'penyelaras_bahagian' ? user.department_id : null,
-              jpn_id: user.role === 'penyelaras_jpn' ? user.jpn_id : null,
-              ...statusData
-            }])
-
-          if (statusError) throw statusError
-        }
+        if (statusError) throw statusError
       }
 
       setSuccess('Syor berjaya dikemas kini!')
