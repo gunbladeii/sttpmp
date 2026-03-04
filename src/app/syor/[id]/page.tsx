@@ -424,11 +424,8 @@ export default function SyorDetailsPage() {
         console.log('✅ Syor updated successfully:', syorResult);
       }
 
-      // Update status tracking (only penyelaras with valid department/jpn can insert)
-      const isPenyelarasBahagian = user.role === 'penyelaras_bahagian' && user.department_id
-      const isPenyelarasJPN = user.role === 'penyelaras_jpn' && user.jpn_id
-
-      if ((isPenyelarasBahagian || isPenyelarasJPN) && formData.tindakan_comments.trim()) {
+      // Update status tracking - all roles with canEditTindakan can insert
+      if (canEditTindakan && formData.tindakan_comments.trim()) {
         const statusEnum = ['belum_selesai', 'dalam_tindakan', 'selesai']
         const safeStatus = statusEnum.includes(formData.tindakan_status) ? formData.tindakan_status : 'belum_selesai'
 
@@ -440,13 +437,18 @@ export default function SyorDetailsPage() {
           updated_at: new Date().toISOString()
         }
 
+        // Determine department/jpn association based on role
+        // admin/peneraju_pemeriksaan have no department/jpn (both null - allowed by updated constraint)
+        const departmentId = user.role === 'penyelaras_bahagian' ? (user.department_id || null) : null
+        const jpnId = user.role === 'penyelaras_jpn' ? (user.jpn_id || null) : null
+
         // Always INSERT a new record to preserve full history trail
         const { error: statusError } = await supabase
           .from('status_tracking')
           .insert([{
             syor_id: syorId,
-            department_id: isPenyelarasBahagian ? user.department_id : null,
-            jpn_id: isPenyelarasJPN ? user.jpn_id : null,
+            department_id: departmentId,
+            jpn_id: jpnId,
             ...statusData
           }])
 
