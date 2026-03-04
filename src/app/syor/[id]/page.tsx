@@ -424,8 +424,11 @@ export default function SyorDetailsPage() {
         console.log('✅ Syor updated successfully:', syorResult);
       }
 
-      // Update status tracking (only penyelaras can update)
-      if (canEditTindakan && formData.tindakan_comments.trim()) {
+      // Update status tracking (only penyelaras with valid department/jpn can insert)
+      const isPenyelarasBahagian = user.role === 'penyelaras_bahagian' && user.department_id
+      const isPenyelarasJPN = user.role === 'penyelaras_jpn' && user.jpn_id
+
+      if ((isPenyelarasBahagian || isPenyelarasJPN) && formData.tindakan_comments.trim()) {
         const statusEnum = ['belum_selesai', 'dalam_tindakan', 'selesai']
         const safeStatus = statusEnum.includes(formData.tindakan_status) ? formData.tindakan_status : 'belum_selesai'
 
@@ -442,8 +445,8 @@ export default function SyorDetailsPage() {
           .from('status_tracking')
           .insert([{
             syor_id: syorId,
-            department_id: user.role === 'penyelaras_bahagian' ? user.department_id : null,
-            jpn_id: user.role === 'penyelaras_jpn' ? user.jpn_id : null,
+            department_id: isPenyelarasBahagian ? user.department_id : null,
+            jpn_id: isPenyelarasJPN ? user.jpn_id : null,
             ...statusData
           }])
 
