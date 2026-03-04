@@ -146,7 +146,7 @@ export function useNotifications() {
 
     // Subscribe to new notifications
     const channel = supabase
-      .channel('notifications')
+      .channel(`notifications:${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -192,12 +192,11 @@ export function useNotifications() {
             created_by: null,
             metadata: null
           } as Notification
-          setNotifications(prev =>
-            prev.map(n => n.id === updatedNotification.id ? updatedNotification : n)
-          )
-          if (updatedNotification.read) {
-            setUnreadCount(prev => Math.max(0, prev - 1))
-          }
+          setNotifications(prev => {
+            const updated = prev.map(n => n.id === updatedNotification.id ? updatedNotification : n)
+            setUnreadCount(updated.filter(n => !n.read).length)
+            return updated
+          })
         }
       )
       .on(
