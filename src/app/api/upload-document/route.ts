@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { uploadFileToLocalStorage, validatePDFFile, deleteFileFromLocalStorage } from '@/lib/googleDrive';
+import { uploadFileToStorage, validatePDFFile, deleteFileFromStorage } from '@/lib/storage';
 import { createClient } from '@supabase/supabase-js';
-import { z } from 'zod';
 import { sanitizeString, uuidSchema, fileSchema, checkRateLimit } from '@/lib/input-validation';
 
 export async function POST(request: NextRequest) {
@@ -146,10 +145,10 @@ export async function POST(request: NextRequest) {
       userId: user.id
     })
 
-    // Upload to local storage (or your chosen storage solution)
-    const uploadResult = await uploadFileToLocalStorage(file, sanitizedFileName, syorId);
+    // Upload to Supabase Storage
+    const uploadResult = await uploadFileToStorage(file, syorId, user.id);
 
-    console.log('✅ File uploaded to storage:', uploadResult)
+    console.log('✅ File uploaded to Supabase Storage:', uploadResult)
 
     // Save document info to database, associated with the authenticated user
     const { data: docData, error: docError } = await supabase
@@ -160,8 +159,8 @@ export async function POST(request: NextRequest) {
           file_name: sanitizedFileName,
           file_size: file.size,
           file_type: file.type,
-          google_drive_id: uploadResult.id,
-          google_drive_link: uploadResult.webViewLink,
+          google_drive_id: uploadResult.id,       // stores storage file path
+          google_drive_link: uploadResult.publicUrl, // stores signed URL
           uploaded_by: user.id, // Securely use the authenticated user's ID
           uploaded_at: new Date().toISOString(),
         },
@@ -277,8 +276,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden - Anda tidak mempunyai kebenaran' }, { status: 403 });
     }
     
-    // Delete from local storage
-    await deleteFileFromLocalStorage(docData.google_drive_id);
+    // Delete from Supabase Storage
+    await deleteFileFromStorage(docData.google_drive_id);
 
     // Delete from database
     const { error: deleteError } = await supabase
