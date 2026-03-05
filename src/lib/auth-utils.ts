@@ -62,9 +62,12 @@ export const validateEmail = (email: string): boolean => {
   return emailRegex.test(email)
 }
 
-// MOE domain validation
+// Allowed email domains
+const ALLOWED_DOMAINS = ['@moe.gov.my', '@ipgm.edu.my']
+
+// MOE/IPGM domain validation
 export const validateMOEDomain = (email: string): boolean => {
-  return email.toLowerCase().endsWith('@moe.gov.my')
+  return ALLOWED_DOMAINS.some((domain) => email.toLowerCase().endsWith(domain))
 }
 
 // Generate verification token

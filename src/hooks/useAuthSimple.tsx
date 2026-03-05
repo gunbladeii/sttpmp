@@ -119,8 +119,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true)
       setError('')
 
-      if (!credentials.email.includes('@moe.gov.my')) {
-        throw new Error('Hanya email dengan domain @moe.gov.my yang dibenarkan')
+      const allowedDomains = ['@moe.gov.my', '@ipgm.edu.my']
+      if (!allowedDomains.some((d) => credentials.email.toLowerCase().includes(d))) {
+        throw new Error('Hanya email dengan domain @moe.gov.my atau @ipgm.edu.my yang dibenarkan')
       }
 
       console.log('🔐 Attempting login for:', credentials.email)

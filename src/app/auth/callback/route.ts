@@ -27,8 +27,9 @@ export async function GET(request: NextRequest) {
       if (!error && data.user) {
         console.log('✅ User authenticated:', data.user.email)
         
-        // Check if user email is from MOE domain
-        if (!data.user.email?.endsWith('@moe.gov.my')) {
+        // Check if user email is from allowed domain
+        const allowedDomains = ['@moe.gov.my', '@ipgm.edu.my']
+        if (!allowedDomains.some((d) => data.user.email?.toLowerCase().endsWith(d))) {
           console.log('❌ Invalid domain:', data.user.email)
           return Response.redirect(`${origin}/login?error=invalid_domain`)
         }

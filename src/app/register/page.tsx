@@ -220,10 +220,10 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                placeholder="nama@moe.gov.my"
+                placeholder="nama@moe.gov.my atau nama@ipgm.edu.my"
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Hanya email dengan domain @moe.gov.my yang dibenarkan
+                Hanya email dengan domain @moe.gov.my atau @ipgm.edu.my yang dibenarkan
               </p>
             </div>
 

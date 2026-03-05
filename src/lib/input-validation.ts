@@ -6,12 +6,15 @@
 
 import { z } from 'zod';
 
+// Allowed email domains
+const ALLOWED_DOMAINS = ['@moe.gov.my', '@ipgm.edu.my']
+
 // Email validation schema
 export const emailSchema = z
   .string()
   .email('Format email tidak sah')
-  .refine((email) => email.endsWith('@moe.gov.my'), {
-    message: 'Hanya email dengan domain @moe.gov.my yang dibenarkan',
+  .refine((email) => ALLOWED_DOMAINS.some((domain) => email.toLowerCase().endsWith(domain)), {
+    message: 'Hanya email dengan domain @moe.gov.my atau @ipgm.edu.my yang dibenarkan',
   });
 
 // Password validation schema

@@ -11,9 +11,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email dan nama diperlukan' }, { status: 400 })
     }
 
-    if (!email.includes('@moe.gov.my')) {
+    const allowedDomains = ['@moe.gov.my', '@ipgm.edu.my']
+    if (!allowedDomains.some((d) => email.toLowerCase().includes(d))) {
       return NextResponse.json({ 
-        error: 'Hanya email dengan domain @moe.gov.my yang dibenarkan' 
+        error: 'Hanya email dengan domain @moe.gov.my atau @ipgm.edu.my yang dibenarkan' 
       }, { status: 400 })
     }
 

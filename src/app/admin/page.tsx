@@ -290,9 +290,9 @@ export default function AdminManagementPage() {
             </p>
           </div>
           <div className="cloudpeak-card p-8">
-            <h3 className="text-sm font-medium text-slate-400">Pengguna Domain MOE</h3>
+            <h3 className="text-sm font-medium text-slate-400">Pengguna Domain Dibenarkan</h3>
             <p className="text-3xl font-bold text-green-400">
-              {registrations.filter(r => r.email.includes('@moe.gov.my')).length}
+              {registrations.filter(r => r.email.includes('@moe.gov.my') || r.email.includes('@ipgm.edu.my')).length}
             </p>
           </div>
           <div className="cloudpeak-card p-8">
