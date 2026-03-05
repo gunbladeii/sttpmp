@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
 import { Database } from '@/types/database.types';
 
-type Announcement = Database['public']['Tables']['announcements']['Row'];
+export type Announcement = Database['public']['Tables']['announcements']['Row'];
 
 const AnnouncementBox: React.FC = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);

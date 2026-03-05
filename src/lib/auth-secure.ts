@@ -6,7 +6,7 @@ import { createServerSupabaseClient } from '@/lib/supabase'
 import { ApiErrors } from './api-response'
 import type { Database } from '@/types/database.types'
 
-export type UserRole = Database['public']['Enums']['user_role']
+export type UserRole = 'admin' | 'peneraju_pemeriksaan' | 'penyelaras_bahagian' | 'penyelaras_jpn' | 'penyelaras_jnn' | 'pemantau'
 
 export interface AuthUser {
   id: string

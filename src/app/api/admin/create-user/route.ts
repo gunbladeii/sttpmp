@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     const validation = createUserSchema.safeParse(sanitizedBody)
     if (!validation.success) {
       return NextResponse.json({ 
-        error: validation.error.errors[0]?.message || 'Data tidak sah' 
+        error: validation.error.issues[0]?.message || 'Data tidak sah' 
       }, { status: 400 })
     }
 

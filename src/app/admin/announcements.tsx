@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import AnnouncementBox, { Announcement } from "@/components/AnnouncementBox";
-import { useAnnouncementApi } from "@/hooks/useAnnouncementApi";
+import AnnouncementBox from "@/components/AnnouncementBox";
+import { useAnnouncementApi, type Announcement } from "@/hooks/useAnnouncementApi";
 import { useAuth } from "@/hooks/useAuthSimple";
 import TipTapEditor from '@/components/TipTapEditor';
 
@@ -47,14 +47,14 @@ export default function AdminAnnouncementsPage() {
     }
   }
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: string) {
     if (confirm("Padam pengumuman ini?")) {
-       const success = await deleteAnnouncement(id.toString());
+       const success = await deleteAnnouncement(id);
       if (success) fetchAnnouncements().then(setAnnouncements);
     }
   }
 
-  async function handlePublish(id: number, published: boolean) {
+  async function handlePublish(id: string, published: boolean) {
     const success = await publishAnnouncement(id, published);
     if (success) fetchAnnouncements().then(setAnnouncements);
   }

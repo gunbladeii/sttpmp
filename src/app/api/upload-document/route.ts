@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     
     if (!fileValidation.success) {
       return NextResponse.json({ 
-        error: fileValidation.error.errors[0]?.message || 'Fail tidak sah' 
+        error: fileValidation.error.issues[0]?.message || 'Fail tidak sah' 
       }, { status: 400 });
     }
 

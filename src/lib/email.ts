@@ -1,4 +1,5 @@
 import * as brevo from '@getbrevo/brevo'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // Handle SSL certificate issues in development/corporate networks
 if (process.env.NODE_ENV === 'development') {

@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
     const validation = registrationSchema.safeParse(sanitizedBody)
     
     if (!validation.success) {
-      console.error('Validation errors:', validation.error.errors)
-      const firstError = validation.error.errors?.[0]
+      console.error('Validation errors:', validation.error.issues)
+      const firstError = validation.error.issues?.[0]
       return NextResponse.json({ 
         error: firstError?.message || 'Data tidak sah. Sila pastikan semua maklumat diisi dengan betul.' 
       }, { status: 400 })
@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if email already exists in Supabase Auth
-    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers()
-    const authUserExists = users.some(u => u.email === email)
+    const { data: listUsersResult } = await supabaseAdmin.auth.admin.listUsers()
+    const authUserExists = (listUsersResult?.users as any[]).some((u: any) => u.email === email)
     
     if (authUserExists) {
       return NextResponse.json({ error: 'Email ini telah berdaftar dalam sistem auth.' }, { status: 400 })

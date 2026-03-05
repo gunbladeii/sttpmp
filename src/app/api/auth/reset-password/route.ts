@@ -92,7 +92,7 @@ export async function POST(request: Request) {
     // This ensures we update the correct auth account
     try {
       const { data: allAuthUsers } = await supabase.auth.admin.listUsers();
-      const authUser = allAuthUsers.users.find(u => u.email === user.email);
+      const authUser = ((allAuthUsers as any)?.users as any[])?.find((u: any) => u.email === user.email);
 
       if (authUser) {
         // Auth user exists - update password using the CORRECT auth ID

@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get auth user ID from Supabase Auth (OAuth user)
-    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers()
-    const authUser = users.find(u => u.email === email)
+    const { data: listUsersResult } = await supabaseAdmin.auth.admin.listUsers()
+    const authUser = (listUsersResult?.users as any[]).find((u: any) => u.email === email)
 
     if (!authUser) {
       return NextResponse.json({ 

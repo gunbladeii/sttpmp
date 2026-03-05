@@ -11,8 +11,8 @@ import { getStatusColor, formatDate, getStatusText, capitalizeWords } from '@/li
 
 export default function SyorList() {
   const { user, loading: authLoading } = useAuth()
-  const [syor, setSyor] = useState<Record<string, unknown>[]>([])
-  const [userDetails, setUserDetails] = useState<Record<string, unknown> | null>(null) // Store user with department/JPN details
+  const [syor, setSyor] = useState<any[]>([])
+  const [userDetails, setUserDetails] = useState<any | null>(null) // Store user with department/JPN details
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'belum_selesai' | 'dalam_tindakan' | 'selesai' | 'hampir_tamat'>('all')

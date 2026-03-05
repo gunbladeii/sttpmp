@@ -10,6 +10,7 @@ export interface User {
   role: RoleType
   department_id?: string
   jpn_id?: string
+  sector?: string
   password_hash?: string
   password_plain?: string // For admin reference only
   email_verified: boolean
@@ -18,6 +19,9 @@ export interface User {
   last_login?: string
   created_at: string
   updated_at: string
+  // Relations loaded by auth
+  department?: { id: string; name: string; code: string; sector?: string | null } | null
+  jpn?: { id: string; name: string; state: string } | null
 }
 
 export interface RegistrationRequest {

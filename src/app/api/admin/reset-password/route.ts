@@ -71,10 +71,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('📊 Total auth users found:', authUser.users.length)
+    console.log('📊 Total auth users found:', (authUser as any)?.users?.length)
 
     // Find the auth user with matching email
-    const matchedAuthUser = authUser.users.find(u => u.email === userData.email)
+    const matchedAuthUser = ((authUser as any)?.users as any[]).find((u: any) => u.email === userData.email)
 
     console.log('🔍 Looking for auth user with email:', userData.email)
     console.log('✅ Matched auth user:', matchedAuthUser?.id)

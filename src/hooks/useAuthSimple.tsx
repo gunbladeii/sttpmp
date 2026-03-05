@@ -283,7 +283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const canUpdateStatus = () => {
-    return hasRole(['penyelaras_bahagian', 'penyelaras_jpn', 'pemantau_bahagian', 'pemantau_jpn'])
+    return hasRole(['penyelaras_bahagian', 'penyelaras_jpn', 'penyelaras_jnn', 'admin'])
   }
 
   const canViewAllSyor = () => {

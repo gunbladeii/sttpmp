@@ -9,17 +9,17 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  console.log('🗑️ DELETE API called for status ID:', params.id)
+  const { id: statusId } = await params
+  console.log('🗑️ DELETE API called for status ID:', statusId)
   
   try {
-    const statusId = params.id
 
     if (!statusId) {
       console.error('❌ No status ID provided')
       return NextResponse.json(
-        { error: 'Status ID is required' },
+        { error: 'Status ID diperlukan' },
         { status: 400 }
       )
     }

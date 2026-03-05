@@ -14,10 +14,10 @@ export type Database = {
           id: string
           email: string
           name: string
-          role: 'admin' | 'peneraju_pemeriksaan' | 'penyelaras_bahagian' | 'penyelaras_jpn' | 'pemantau'
+          role: 'admin' | 'peneraju_pemeriksaan' | 'penyelaras_bahagian' | 'penyelaras_jpn' | 'penyelaras_jnn' | 'pemantau'
           department_id: string | null
           jpn_id: string | null
-          sector: 'SPK' | 'SPHEMK' | 'SPIP' | null
+          sector: string | null
           is_active: boolean
           is_approved: boolean
           created_at: string
@@ -27,10 +27,10 @@ export type Database = {
           id?: string
           email: string
           name: string
-          role?: 'admin' | 'peneraju_pemeriksaan' | 'penyelaras_bahagian' | 'penyelaras_jpn' | 'pemantau'
+          role?: 'admin' | 'peneraju_pemeriksaan' | 'penyelaras_bahagian' | 'penyelaras_jpn' | 'penyelaras_jnn' | 'pemantau'
           department_id?: string | null
           jpn_id?: string | null
-          sector?: 'SPK' | 'SPHEMK' | 'SPIP' | null
+          sector?: string | null
           is_active?: boolean
           is_approved?: boolean
           created_at?: string
@@ -40,10 +40,10 @@ export type Database = {
           id?: string
           email?: string
           name?: string
-          role?: 'admin' | 'peneraju_pemeriksaan' | 'penyelaras_bahagian' | 'penyelaras_jpn' | 'pemantau'
+          role?: 'admin' | 'peneraju_pemeriksaan' | 'penyelaras_bahagian' | 'penyelaras_jpn' | 'penyelaras_jnn' | 'pemantau'
           department_id?: string | null
           jpn_id?: string | null
-          sector?: 'SPK' | 'SPHEMK' | 'SPIP' | null
+          sector?: string | null
           is_active?: boolean
           is_approved?: boolean
           created_at?: string
@@ -144,11 +144,15 @@ export type Database = {
           title: string
           description: string
           priority: 'rendah' | 'sederhana' | 'tinggi' | 'kritikal'
+          pemeriksaan_type: string | null
           due_date: string
+          response_deadline: string | null
           created_by: string
           assigned_to_department: string | null
           assigned_to_jpn: string | null
           document_url: string | null
+          endorsement_date: string | null
+          is_overdue: boolean
           created_at: string
           updated_at: string
         }
@@ -157,11 +161,15 @@ export type Database = {
           title: string
           description: string
           priority: 'rendah' | 'sederhana' | 'tinggi' | 'kritikal'
+          pemeriksaan_type?: string | null
           due_date: string
+          response_deadline?: string | null
           created_by: string
           assigned_to_department?: string | null
           assigned_to_jpn?: string | null
           document_url?: string | null
+          endorsement_date?: string | null
+          is_overdue?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -170,11 +178,15 @@ export type Database = {
           title?: string
           description?: string
           priority?: 'rendah' | 'sederhana' | 'tinggi' | 'kritikal'
+          pemeriksaan_type?: string | null
           due_date?: string
+          response_deadline?: string | null
           created_by?: string
           assigned_to_department?: string | null
           assigned_to_jpn?: string | null
           document_url?: string | null
+          endorsement_date?: string | null
+          is_overdue?: boolean
           created_at?: string
           updated_at?: string
         }

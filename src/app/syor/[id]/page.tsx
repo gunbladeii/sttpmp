@@ -37,6 +37,8 @@ interface Document {
   }
 }
 
+type StatusType = 'belum_selesai' | 'dalam_tindakan' | 'selesai'
+
 interface SyorDetail {
   id: string
   title: string
@@ -56,11 +58,16 @@ interface SyorDetail {
   jpns?: Array<{ id?: string; name?: string; state?: string }>
   status_tracking?: Array<{
     id?: string
-    status?: string
+    status?: StatusType | string
     weight?: number
     comments?: string
     updated_at?: string
-    updater?: { name?: string }
+    updater?: {
+      name?: string
+      department?: { name?: string; code?: string } | null
+      jpn?: { name?: string; state?: string } | null
+      sector?: string | null
+    }
   }>
 }
 
@@ -194,8 +201,8 @@ export default function SyorDetailsPage() {
           response_deadline: data.response_deadline || '',
           assigned_to_department: assignedDepartments[0]?.id || '',
           assigned_to_jpn: assignedJPNs[0]?.id || '',
-          tindakan_comments: latestStatusData?.comments || '',
-          tindakan_status: latestStatusData?.status || ''
+          tindakan_comments: (latestStatusData as any)?.comments || '',
+          tindakan_status: (latestStatusData as any)?.status || ''
         });
         setPemeriksaanSearch(data.title || '-')
 
@@ -400,7 +407,7 @@ export default function SyorDetailsPage() {
         const syorData = {
           title: formData.title.trim(),
           description: formData.description.trim(),
-          priority: formData.priority,
+          priority: formData.priority as 'rendah' | 'sederhana' | 'tinggi' | 'kritikal',
           pemeriksaan_type: formData.pemeriksaan_type,
           due_date: formData.due_date,
           response_deadline: formData.response_deadline,
@@ -430,7 +437,7 @@ export default function SyorDetailsPage() {
         const safeStatus = statusEnum.includes(formData.tindakan_status) ? formData.tindakan_status : 'belum_selesai'
 
         const statusData = {
-          status: safeStatus,
+          status: safeStatus as StatusType,
           weight: safeStatus === 'belum_selesai' ? 0 : safeStatus === 'dalam_tindakan' ? 0.5 : 1,
           comments: formData.tindakan_comments.trim(),
           updated_by: user.id,
@@ -821,9 +828,9 @@ export default function SyorDetailsPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <span 
-                    className={`cloudpeak-badge px-4 py-2 text-sm font-medium rounded-full ${getStatusColor(latestStatus?.status || 'belum_selesai')}`}
+                    className={`cloudpeak-badge px-4 py-2 text-sm font-medium rounded-full ${getStatusColor((latestStatus?.status || 'belum_selesai') as StatusType)}`}
                   >
-                    {getStatusText(latestStatus?.status || 'belum_selesai')}
+                    {getStatusText((latestStatus?.status || 'belum_selesai') as StatusType)}
                   </span>
                   <span className="text-sm text-slate-400">
                     Wajaran: <span className="text-white font-medium">{latestStatus?.weight || 0}</span>
@@ -1108,9 +1115,9 @@ export default function SyorDetailsPage() {
                         </select>
                       ) : (
                         <span 
-                          className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(latestStatus?.status || 'belum_selesai')}`}
+                          className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor((latestStatus?.status || 'belum_selesai') as StatusType)}`}
                         >
-                          {getStatusText(latestStatus?.status || 'belum_selesai')}
+                          {getStatusText((latestStatus?.status || 'belum_selesai') as StatusType)}
                         </span>
                       )}
                     </div>
@@ -1199,9 +1206,9 @@ export default function SyorDetailsPage() {
                       <div key={status.id} className="flex items-start gap-4 p-4 bg-slate-800/30 rounded-lg border border-slate-700/30">
                         <div className="flex-shrink-0">
                           <span 
-                            className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(status.status)}`}
+                            className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor((status.status || 'belum_selesai') as StatusType)}`}
                           >
-                            {getStatusText(status.status)}
+                            {getStatusText((status.status || 'belum_selesai') as StatusType)}
                           </span>
                         </div>
                         <div className="flex-1">

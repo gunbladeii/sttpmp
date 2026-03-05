@@ -51,6 +51,7 @@ interface SectorIssues {
   sector: string
   count: number
   percentage: number
+  [key: string]: string | number
 }
 
 interface DimensionData {
