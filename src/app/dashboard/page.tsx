@@ -685,7 +685,13 @@ export default function Dashboard() {
                             )}
                           </div>
                           <p className="text-sm text-slate-300 mb-1">
-                            Ditugaskan kepada: {syor.department?.name || syor.jpn?.name || 'Tidak ditetapkan'}
+                            Ditugaskan kepada: {
+                              syor.department?.name ||
+                              syor.jpn?.name ||
+                              (Array.isArray(syor.status_tracking) ? syor.status_tracking.find((st: any) => st.assigned_jpn)?.assigned_jpn?.name : null) ||
+                              (Array.isArray(syor.status_tracking) ? syor.status_tracking.find((st: any) => st.assigned_department)?.assigned_department?.name : null) ||
+                              'Tidak ditetapkan'
+                            }
                           </p>
                           {syor.creator && (
                             <p className="text-sm text-blue-300 mb-1">

@@ -449,43 +449,19 @@ export default function SyorDetailsPage() {
         const departmentId = user.role === 'penyelaras_bahagian' ? (user.department_id || null) : null
         const jpnId = (user.role === 'penyelaras_jpn' || user.role === 'penyelaras_jnn') ? (user.jpn_id || null) : null
 
-        // Use UPSERT for penyelaras roles — unique constraint prevents duplicate INSERT
-        // for the same (syor_id, jpn_id) or (syor_id, department_id) combination.
-        // admin/peneraju_pemeriksaan use plain INSERT (null dept/jpn won't trigger constraint).
+        // Always INSERT (not UPSERT) so every submission creates a new history record
+        // This allows full history tracking for all roles.
         let statusError = null
 
-        if (jpnId) {
-          const { error } = await supabase
-            .from('status_tracking')
-            .upsert([{
-              syor_id: syorId,
-              department_id: null,
-              jpn_id: jpnId,
-              ...statusData
-            }], { onConflict: 'syor_id,jpn_id' })
-          statusError = error
-        } else if (departmentId) {
-          const { error } = await supabase
-            .from('status_tracking')
-            .upsert([{
-              syor_id: syorId,
-              department_id: departmentId,
-              jpn_id: null,
-              ...statusData
-            }], { onConflict: 'syor_id,department_id' })
-          statusError = error
-        } else {
-          // admin / peneraju_pemeriksaan — insert new record (no unique constraint on null pairs)
-          const { error } = await supabase
-            .from('status_tracking')
-            .insert([{
-              syor_id: syorId,
-              department_id: null,
-              jpn_id: null,
-              ...statusData
-            }])
-          statusError = error
-        }
+        const { error } = await supabase
+          .from('status_tracking')
+          .insert([{
+            syor_id: syorId,
+            department_id: departmentId,
+            jpn_id: jpnId,
+            ...statusData
+          }])
+        statusError = error
 
         if (statusError) throw statusError
       }
@@ -511,6 +487,29 @@ export default function SyorDetailsPage() {
             tindakanStatus: formData.tindakan_status,
           }),
         }).catch((err) => console.warn('⚠️ Email notify failed (non-blocking):', err))
+      }
+
+      // Bell notification: when penyelaras submits maklum balas, notify the creator (admin/peneraju)
+      if (
+        (user.role === 'penyelaras_bahagian' || user.role === 'penyelaras_jpn' || user.role === 'penyelaras_jnn') &&
+        canEditTindakan &&
+        formData.tindakan_comments.trim() &&
+        syor.created_by
+      ) {
+        supabase
+          .from('notifications')
+          .insert([{
+            user_id: syor.created_by,
+            syor_id: syorId,
+            type: 'status_update',
+            title: `Respons Baharu: ${syor.title}`,
+            message: `${user.name || 'Penyelaras'} telah memberi maklum balas: "${formData.tindakan_comments.trim().slice(0, 100)}"`,
+            read: false,
+          }])
+          .then(({ error: notifErr }) => {
+            if (notifErr) console.warn('⚠️ Bell notify to creator failed (non-blocking):', notifErr.message)
+            else console.log('🔔 Bell notification sent to creator')
+          })
       }
       
       console.log('✅ Save completed successfully');
@@ -1183,7 +1182,7 @@ export default function SyorDetailsPage() {
                   <h3 className="text-xl font-semibold text-white">
                     Dokumen Sokongan
                   </h3>
-                  {canUploadDocuments && !isEditing && (
+                  {canUploadDocuments && (
                     <span className="text-sm text-blue-400">
                       Boleh muat naik dokumen PDF
                     </span>
@@ -1196,7 +1195,6 @@ export default function SyorDetailsPage() {
                     <DocumentUpload
                       syorId={syorId}
                       onUploadSuccess={handleDocumentUpload}
-                      disabled={isEditing}
                     />
                   </div>
                 )}

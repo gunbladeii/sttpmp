@@ -65,14 +65,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'Tiada penyelaras yang perlu diberitahu', emailsSent: 0 })
     }
 
-    // Collect penyelaras recipients
-    type Recipient = { email: string; name: string }
+    // Collect penyelaras recipients (include id for bell notifications)
+    type Recipient = { id: string; email: string; name: string }
     const recipients: Recipient[] = []
 
     if (deptIds.length > 0) {
       const { data: deptUsers } = await supabase
         .from('users')
-        .select('email, name')
+        .select('id, email, name')
         .eq('role', 'penyelaras_bahagian')
         .eq('is_active', true)
         .eq('is_approved', true)
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     if (jpnIds.length > 0) {
       const { data: jpnUsers } = await supabase
         .from('users')
-        .select('email, name')
+        .select('id, email, name')
         .in('role', ['penyelaras_jpn', 'penyelaras_jnn'])
         .eq('is_active', true)
         .eq('is_approved', true)
@@ -104,6 +104,32 @@ export async function POST(request: NextRequest) {
 
     const emailsSent: string[] = []
     const emailErrors: string[] = []
+
+    // Prepare bell notification records for all recipients
+    const bellNotifications = unique.map((recipient) => ({
+      user_id: recipient.id,
+      syor_id: syorId,
+      type: type === 'new_syor' ? 'new_syor' : 'status_update',
+      title: type === 'new_syor'
+        ? `Syor Baharu Ditugaskan: ${syor.title}`
+        : `Kemaskini Tindakan: ${syor.title}`,
+      message: type === 'new_syor'
+        ? `${creatorDisplayName} telah menugaskan syor baharu kepada anda: "${syor.title}".`
+        : `${creatorDisplayName} telah mengemaskini tindakan: "${tindakanComments?.slice(0, 100) || ''}"`,
+      read: false,
+    }))
+
+    // Insert bell notifications (non-blocking, errors are logged only)
+    if (bellNotifications.length > 0) {
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert(bellNotifications)
+      if (notifError) {
+        console.warn('⚠️ Bell notification insert failed (non-blocking):', notifError.message)
+      } else {
+        console.log(`🔔 Bell notifications created for ${bellNotifications.length} recipient(s)`)
+      }
+    }
 
     for (const recipient of unique) {
       try {
