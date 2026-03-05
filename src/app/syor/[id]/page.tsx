@@ -493,6 +493,25 @@ export default function SyorDetailsPage() {
       setSuccess('Syor berjaya dikemas kini!')
       setError(null)
       setIsEditing(false)
+
+      // Send email notification to penyelaras when peneraju/admin submits tindakan
+      if (
+        (user.role === 'admin' || user.role === 'peneraju_pemeriksaan') &&
+        canEditTindakan &&
+        formData.tindakan_comments.trim()
+      ) {
+        fetch('/api/syor/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'tindakan',
+            syorId,
+            creatorName: user.name,
+            tindakanComments: formData.tindakan_comments.trim(),
+            tindakanStatus: formData.tindakan_status,
+          }),
+        }).catch((err) => console.warn('⚠️ Email notify failed (non-blocking):', err))
+      }
       
       console.log('✅ Save completed successfully');
 

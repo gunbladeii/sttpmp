@@ -348,7 +348,18 @@ export default function CreateSyorPage() {
       }
 
       setSuccess(`Syor berjaya dicipta dan dihantar kepada ${statusRecords.length} pihak!`)
-      
+
+      // Send email notifications to assigned penyelaras (fire-and-forget, don't block UI)
+      fetch('/api/syor/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'new_syor',
+          syorId: newSyor.id,
+          creatorName: user.name,
+        }),
+      }).catch((err) => console.warn('⚠️ Email notify failed (non-blocking):', err))
+
       // Reset form
       setFormData({
         title: '',

@@ -34,7 +34,7 @@ export async function sendEmail({
     
     // Use BREVO_SENDER_EMAIL from env
     const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com'
-    const senderName = process.env.BREVO_SENDER_NAME || 'STTPMP - Jemaah Nazir'
+    const senderName = process.env.BREVO_SENDER_NAME || 'STRiKe - Jemaah Nazir'
     
     sendSmtpEmail.sender = { email: senderEmail, name: senderName }
     
@@ -101,8 +101,8 @@ export async function sendApprovalEmail({
             <div style="margin-bottom: 20px;">
               <img src="https://raw.githubusercontent.com/gunbladeii/sttpmp/main/public/logoJN.png" alt="Logo Jemaah Nazir" style="width: 80px; height: auto; display: inline-block;" />
             </div>
-            <h1 style="color: #a78bfa; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 2px;">STTPMP</h1>
-            <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 14px;">Kementerian Pendidikan Malaysia</p>
+            <img src="https://sttpmp.vercel.app/LogoStrike.png" alt="STRiKe" style="height: 42px; width: auto; display: inline-block;" />
+            <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 13px;">Jemaah Nazir | Kementerian Pendidikan Malaysia</p>
           </div>
 
           <!-- Main Content -->
@@ -119,7 +119,7 @@ export async function sendApprovalEmail({
             </p>
 
             <p style="font-size: 15px; color: #475569; line-height: 1.8; margin-bottom: 24px;">
-              Tahniah! Permohonan akaun anda untuk sistem <strong>STTPMP (Dashboard Status Tindakan Terhadap Perakuan Menteri Pendidikan)</strong> telah diluluskan oleh Administrator.
+              Tahniah! Permohonan akaun anda untuk sistem <strong>STRiKe</strong> telah diluluskan oleh Administrator. Anda kini adalah sebahagian daripada Sistem Tindakan Rekod iKeberkesanan Pemeriksaan Jemaah Nazir.
             </p>
 
             <!-- Role Information -->
@@ -135,7 +135,7 @@ export async function sendApprovalEmail({
             <!-- Call to Action Button -->
             <div style="text-align: center; margin: 32px 0;">
               <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);">
-                🔐 Log Masuk ke STTPMP
+                🔐 Log Masuk ke STRiKe
               </a>
             </div>
 
@@ -172,7 +172,7 @@ export async function sendApprovalEmail({
                 Jemaah Nazir | Kementerian Pendidikan Malaysia
               </p>
               <p style="margin: 8px 0 0 0; font-size: 12px;">
-                © ${new Date().getFullYear()} STTPMP - Semua hak cipta terpelihara
+                © ${new Date().getFullYear()} STRiKe - Semua hak cipta terpelihara
               </p>
             </div>
           </div>
@@ -182,9 +182,9 @@ export async function sendApprovalEmail({
       `
 
     const sendSmtpEmail = new brevo.SendSmtpEmail()
-    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STTPMP - Jemaah Nazir' }
+    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STRiKe - Jemaah Nazir' }
     sendSmtpEmail.to = [{ email: to, name: userName }]
-    sendSmtpEmail.subject = '✅ Akaun STTPMP Anda Telah Diluluskan'
+    sendSmtpEmail.subject = '✅ Akaun STRiKe Anda Telah Diluluskan'
     sendSmtpEmail.htmlContent = htmlContent
 
     const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
@@ -210,9 +210,9 @@ export async function sendRejectionEmail({
 }: SendRejectionEmailParams) {
   try {
     const sendSmtpEmail = new brevo.SendSmtpEmail()
-    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STTPMP - Jemaah Nazir' }
+    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STRiKe - Jemaah Nazir' }
     sendSmtpEmail.to = [{ email: to, name: userName }]
-    sendSmtpEmail.subject = '❌ Permohonan Akaun STTPMP'
+    sendSmtpEmail.subject = '❌ Permohonan Akaun STRiKe'
     sendSmtpEmail.htmlContent = `
         <!DOCTYPE html>
         <html lang="ms">
@@ -225,8 +225,11 @@ export async function sendRejectionEmail({
           
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h1 style="color: #a78bfa; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 2px;">STTPMP</h1>
-            <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 14px;">Kementerian Pendidikan Malaysia</p>
+            <div style="margin-bottom: 16px;">
+              <img src="https://raw.githubusercontent.com/gunbladeii/sttpmp/main/public/logoJN.png" alt="Logo Jemaah Nazir" style="width: 70px; height: auto; display: inline-block;" />
+            </div>
+            <img src="https://sttpmp.vercel.app/LogoStrike.png" alt="STRiKe" style="height: 42px; width: auto; display: inline-block;" />
+            <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 13px;">Jemaah Nazir | Kementerian Pendidikan Malaysia</p>
           </div>
 
           <!-- Main Content -->
@@ -237,7 +240,7 @@ export async function sendRejectionEmail({
             </p>
 
             <p style="font-size: 15px; color: #475569; line-height: 1.8; margin-bottom: 24px;">
-              Terima kasih atas permohonan akaun STTPMP anda. Setelah semakan, permohonan anda tidak dapat diluluskan pada masa ini.
+              Terima kasih atas permohonan akaun STRiKe anda. Setelah semakan, permohonan anda tidak dapat diluluskan pada masa ini.
             </p>
 
             ${reason ? `
@@ -303,8 +306,11 @@ export async function sendRegistrationPendingEmail({
         <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
           
           <div style="background: linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h1 style="color: #a78bfa; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 2px;">STTPMP</h1>
-            <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 14px;">Kementerian Pendidikan Malaysia</p>
+            <div style="margin-bottom: 16px;">
+              <img src="https://raw.githubusercontent.com/gunbladeii/sttpmp/main/public/logoJN.png" alt="Logo Jemaah Nazir" style="width: 70px; height: auto; display: inline-block;" />
+            </div>
+            <img src="https://sttpmp.vercel.app/LogoStrike.png" alt="STRiKe" style="height: 42px; width: auto; display: inline-block;" />
+            <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 13px;">Jemaah Nazir | Kementerian Pendidikan Malaysia</p>
           </div>
 
           <div style="background: white; padding: 40px 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
@@ -319,7 +325,7 @@ export async function sendRegistrationPendingEmail({
             </p>
 
             <p style="font-size: 15px; color: #475569; line-height: 1.8; margin-bottom: 24px;">
-              Terima kasih kerana mendaftar untuk menggunakan Sistem Tindakan Terhadap Perakuan Menteri Pendidikan (STTPMP).
+              Terima kasih kerana mendaftar untuk menggunakan sistem <strong>STRiKe</strong> (Sistem Tindakan Rekod iKeberkesanan Pemeriksaan).
             </p>
 
             <div style="background: #f0fdf4; border-left: 4px solid #22c55e; padding: 20px; margin-bottom: 24px; border-radius: 4px;">
@@ -352,7 +358,7 @@ export async function sendRegistrationPendingEmail({
 
     await sendEmail({
       to,
-      subject: '✅ Pendaftaran STTPMP Diterima - Menunggu Kelulusan',
+      subject: '✅ Pendaftaran STRiKe Diterima - Menunggu Kelulusan',
       htmlContent,
       name: userName
     })
@@ -403,8 +409,11 @@ export async function sendAdminNewRegistrationEmail({
         <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
           
           <div style="background: linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h1 style="color: #a78bfa; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 2px;">STTPMP</h1>
-            <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 14px;">Admin Notification</p>
+            <div style="margin-bottom: 16px;">
+              <img src="https://raw.githubusercontent.com/gunbladeii/sttpmp/main/public/logoJN.png" alt="Logo Jemaah Nazir" style="width: 70px; height: auto; display: inline-block;" />
+            </div>
+            <img src="https://sttpmp.vercel.app/LogoStrike.png" alt="STRiKe" style="height: 42px; width: auto; display: inline-block;" />
+            <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 13px;">Admin Notification | Jemaah Nazir KPM</p>
           </div>
 
           <div style="background: white; padding: 40px 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
@@ -455,7 +464,7 @@ export async function sendAdminNewRegistrationEmail({
           </div>
 
           <div style="margin-top: 24px; padding: 20px; text-align: center; color: #64748b; font-size: 13px;">
-            <p style="margin: 0;">Email notifikasi automatik - STTPMP Admin Panel</p>
+            <p style="margin: 0;">Email notifikasi automatik - STRiKe Admin Panel</p>
           </div>
 
         </body>
@@ -478,7 +487,7 @@ export async function sendAdminNewRegistrationEmail({
 
       await sendEmail({
         to: adminRecipients,
-        subject: '🔔 Pendaftaran Baharu Memerlukan Kelulusan - STTPMP',
+        subject: '🔔 Pendaftaran Baharu Memerlukan Kelulusan - STRiKe',
         htmlContent
       })
 
@@ -528,8 +537,8 @@ export async function sendDeadlineReminder({
             <div style="margin-bottom: 20px;">
               <img src="https://raw.githubusercontent.com/gunbladeii/sttpmp/main/public/logoJN.png" alt="Logo Jemaah Nazir" style="width: 80px; height: auto; display: inline-block;" />
             </div>
-            <h1 style="color: #a78bfa; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 2px;">STTPMP</h1>
-            <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 14px;">Kementerian Pendidikan Malaysia</p>
+            <img src="https://sttpmp.vercel.app/LogoStrike.png" alt="STRiKe" style="height: 42px; width: auto; display: inline-block;" />
+            <p style="color: #cbd5e1; margin: 10px 0 0 0; font-size: 13px;">Jemaah Nazir | Kementerian Pendidikan Malaysia</p>
           </div>
 
           <!-- Main Content -->
@@ -600,7 +609,7 @@ export async function sendDeadlineReminder({
           <!-- Footer -->
           <div style="margin-top: 24px; padding: 20px; text-align: center; color: #64748b; font-size: 13px;">
             <p style="margin: 0 0 8px 0;">
-              Email ini dihantar secara automatik oleh sistem STTPMP.
+              Email ini dihantar secara automatik oleh sistem STRiKe.
             </p>
             <p style="margin: 0 0 16px 0;">
               Peringatan ini akan dihantar <strong>3 hari sebelum</strong> tarikh akhir maklum balas.
@@ -610,7 +619,7 @@ export async function sendDeadlineReminder({
                 Jemaah Nazir | Kementerian Pendidikan Malaysia
               </p>
               <p style="margin: 8px 0 0 0; font-size: 12px;">
-                © ${new Date().getFullYear()} STTPMP - Semua hak cipta terpelihara
+                © ${new Date().getFullYear()} STRiKe - Semua hak cipta terpelihara
               </p>
             </div>
           </div>
@@ -620,7 +629,7 @@ export async function sendDeadlineReminder({
       `
 
     const sendSmtpEmail = new brevo.SendSmtpEmail()
-    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STTPMP - Jemaah Nazir' }
+    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STRiKe - Jemaah Nazir' }
     sendSmtpEmail.to = [{ email: to, name: penyelarasName }]
     sendSmtpEmail.subject = '⏰ PERINGATAN: Syor Hampir Tamat Tempoh (3 Hari Lagi)'
     sendSmtpEmail.htmlContent = htmlContent
@@ -633,4 +642,274 @@ export async function sendDeadlineReminder({
     console.error('❌ Error sending deadline reminder email:', error)
     return { success: false, error }
   }
+}
+
+// ─── New Syor Notification ────────────────────────────────────────────────────
+
+interface SendSyorCreatedEmailParams {
+  to: string
+  penyelarasName: string
+  syorTitle: string
+  syorId: string
+  priority: string
+  dueDate: string
+  responseDeadline: string
+  creatorName: string
+  syorUrl: string
+}
+
+export async function sendSyorCreatedEmail({
+  to,
+  penyelarasName,
+  syorTitle,
+  syorId,
+  priority,
+  dueDate,
+  responseDeadline,
+  creatorName,
+  syorUrl,
+}: SendSyorCreatedEmailParams) {
+  const priorityLabel: Record<string, string> = {
+    rendah: 'Rendah',
+    sederhana: 'Sederhana',
+    tinggi: 'Tinggi',
+    kritikal: '🔴 Kritikal',
+  }
+  const priorityColor: Record<string, string> = {
+    rendah: '#22c55e',
+    sederhana: '#3b82f6',
+    tinggi: '#f59e0b',
+    kritikal: '#ef4444',
+  }
+  const formatDate = (d: string) => {
+    if (!d || d === '-') return '-'
+    return new Date(d).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="ms">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Syor Baharu Ditujukan Kepada Anda</title>
+    </head>
+    <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f1f5f9;">
+
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%); padding: 32px 24px; text-align: center; border-radius: 14px 14px 0 0;">
+        <div style="margin-bottom: 14px;">
+          <img src="https://raw.githubusercontent.com/gunbladeii/sttpmp/main/public/logoJN.png" alt="Logo Jemaah Nazir" style="width: 64px; height: auto; display: inline-block;" />
+        </div>
+        <img src="https://sttpmp.vercel.app/LogoStrike.png" alt="STRiKe" style="height: 40px; width: auto; display: inline-block;" />
+        <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 12px; letter-spacing: 0.5px;">Jemaah Nazir | Kementerian Pendidikan Malaysia</p>
+      </div>
+
+      <!-- Body -->
+      <div style="background: #ffffff; padding: 36px 28px; border-radius: 0 0 14px 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+
+        <!-- Badge -->
+        <div style="background: #eff6ff; border: 2px solid #3b82f6; border-radius: 10px; padding: 18px; margin-bottom: 28px; text-align: center;">
+          <div style="font-size: 40px; margin-bottom: 8px;">📋</div>
+          <h2 style="color: #1d4ed8; margin: 0; font-size: 18px; font-weight: 700;">Syor Baharu Telah Ditujukan Kepada Anda</h2>
+        </div>
+
+        <p style="font-size: 15px; color: #475569; margin-bottom: 20px;">
+          Assalamualaikum <strong style="color: #0f172a;">${penyelarasName}</strong>,
+        </p>
+        <p style="font-size: 14px; color: #64748b; line-height: 1.8; margin-bottom: 24px;">
+          Satu Perakuan Menteri baharu telah dicipta oleh <strong>${creatorName}</strong> dan ditujukan kepada anda untuk tindakan lanjut.
+        </p>
+
+        <!-- Syor Details Card -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 24px;">
+          <p style="margin: 0 0 14px 0; font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Butiran Syor</p>
+
+          <div style="margin-bottom: 14px;">
+            <p style="margin: 0 0 4px 0; font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tajuk Syor</p>
+            <p style="margin: 0; font-size: 15px; color: #0f172a; font-weight: 600; line-height: 1.4;">${syorTitle}</p>
+          </div>
+
+          <div style="display: inline-block; margin-bottom: 14px;">
+            <p style="margin: 0 0 4px 0; font-size: 11px; color: #94a3b8; text-transform: uppercase;">Keutamaan</p>
+            <span style="display: inline-block; background: ${priorityColor[priority] || '#64748b'}22; color: ${priorityColor[priority] || '#64748b'}; border: 1px solid ${priorityColor[priority] || '#64748b'}44; padding: 3px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">${priorityLabel[priority] || priority}</span>
+          </div>
+
+          <div style="border-top: 1px solid #e2e8f0; padding-top: 14px; display: flex; gap: 24px;">
+            <div style="flex: 1;">
+              <p style="margin: 0 0 4px 0; font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tarikh Akhir Maklum Balas</p>
+              <p style="margin: 0; font-size: 14px; color: #dc2626; font-weight: 600;">${formatDate(responseDeadline)}</p>
+            </div>
+            <div style="flex: 1;">
+              <p style="margin: 0 0 4px 0; font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tarikh Akhir Syor</p>
+              <p style="margin: 0; font-size: 14px; color: #475569; font-weight: 600;">${formatDate(dueDate)}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${syorUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; padding: 14px 36px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px; letter-spacing: 0.3px; box-shadow: 0 4px 12px rgba(37,99,235,0.35);">&#128196; Lihat &amp; Ambil Tindakan</a>
+        </div>
+
+        <!-- Notice -->
+        <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 8px; padding: 14px 16px; margin-top: 16px;">
+          <p style="margin: 0; font-size: 13px; color: #713f12; line-height: 1.6;">⚠️ Sila pastikan maklum balas dikemukakan sebelum <strong>Tarikh Akhir Maklum Balas</strong> yang ditetapkan.</p>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div style="margin-top: 20px; padding: 18px; text-align: center; color: #94a3b8; font-size: 12px;">
+        <p style="margin: 0 0 6px 0;">Email ini dihantar secara automatik oleh sistem STRiKe.</p>
+        <p style="margin: 0 0 12px 0;">Jangan balas email ini. Untuk pertanyaan, hubungi Administrator sistem.</p>
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 12px;">
+          <p style="margin: 0; font-weight: 600; color: #64748b;">Jemaah Nazir | Kementerian Pendidikan Malaysia</p>
+          <p style="margin: 6px 0 0 0; font-size: 11px;">© ${new Date().getFullYear()} STRiKe - Semua hak cipta terpelihara</p>
+        </div>
+      </div>
+
+    </body>
+    </html>
+  `
+
+  const sendSmtpEmail = new brevo.SendSmtpEmail()
+  sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STRiKe - Jemaah Nazir' }
+  sendSmtpEmail.to = [{ email: to, name: penyelarasName }]
+  sendSmtpEmail.subject = `📋 Syor Baharu Ditujukan Kepada Anda: ${syorTitle.substring(0, 60)}${syorTitle.length > 60 ? '...' : ''}`
+  sendSmtpEmail.htmlContent = htmlContent
+
+  const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
+  console.log('✅ Syor created notification sent to:', to)
+  return { success: true, data }
+}
+
+// ─── Tindakan / Maklum Balas Notification ────────────────────────────────────
+
+interface SendTindakanEmailParams {
+  to: string
+  penyelarasName: string
+  syorTitle: string
+  syorId: string
+  tindakanComments: string
+  tindakanStatus: string
+  updaterName: string
+  syorUrl: string
+}
+
+export async function sendTindakanEmail({
+  to,
+  penyelarasName,
+  syorTitle,
+  syorId,
+  tindakanComments,
+  tindakanStatus,
+  updaterName,
+  syorUrl,
+}: SendTindakanEmailParams) {
+  const statusLabel: Record<string, string> = {
+    belum_selesai: 'Belum Selesai',
+    dalam_tindakan: 'Dalam Tindakan',
+    selesai: 'Selesai',
+  }
+  const statusColor: Record<string, string> = {
+    belum_selesai: '#ef4444',
+    dalam_tindakan: '#f59e0b',
+    selesai: '#22c55e',
+  }
+  const statusIcon: Record<string, string> = {
+    belum_selesai: '🔴',
+    dalam_tindakan: '🟡',
+    selesai: '🟢',
+  }
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="ms">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Tindakan Baharu pada Syor</title>
+    </head>
+    <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f1f5f9;">
+
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #0f1629 0%, #1a2236 50%, #0f1629 100%); padding: 32px 24px; text-align: center; border-radius: 14px 14px 0 0;">
+        <div style="margin-bottom: 14px;">
+          <img src="https://raw.githubusercontent.com/gunbladeii/sttpmp/main/public/logoJN.png" alt="Logo Jemaah Nazir" style="width: 64px; height: auto; display: inline-block;" />
+        </div>
+        <img src="https://sttpmp.vercel.app/LogoStrike.png" alt="STRiKe" style="height: 40px; width: auto; display: inline-block;" />
+        <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 12px; letter-spacing: 0.5px;">Jemaah Nazir | Kementerian Pendidikan Malaysia</p>
+      </div>
+
+      <!-- Body -->
+      <div style="background: #ffffff; padding: 36px 28px; border-radius: 0 0 14px 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+
+        <!-- Badge -->
+        <div style="background: #fff7ed; border: 2px solid #f97316; border-radius: 10px; padding: 18px; margin-bottom: 28px; text-align: center;">
+          <div style="font-size: 40px; margin-bottom: 8px;">🔔</div>
+          <h2 style="color: #c2410c; margin: 0; font-size: 18px; font-weight: 700;">Tindakan Baharu Telah Dikemukakan</h2>
+        </div>
+
+        <p style="font-size: 15px; color: #475569; margin-bottom: 20px;">
+          Assalamualaikum <strong style="color: #0f172a;">${penyelarasName}</strong>,
+        </p>
+        <p style="font-size: 14px; color: #64748b; line-height: 1.8; margin-bottom: 24px;">
+          <strong>${updaterName}</strong> telah mengemukakan tindakan/maklum balas baharu bagi syor yang ditujukan kepada anda.
+        </p>
+
+        <!-- Syor Details -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+          <p style="margin: 0 0 12px 0; font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Butiran Syor</p>
+          <p style="margin: 0 0 4px 0; font-size: 11px; color: #94a3b8; text-transform: uppercase;">Tajuk Syor</p>
+          <p style="margin: 0; font-size: 15px; color: #0f172a; font-weight: 600; line-height: 1.4;">${syorTitle}</p>
+        </div>
+
+        <!-- Tindakan Details -->
+        <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 20px; margin-bottom: 24px;">
+          <p style="margin: 0 0 12px 0; font-size: 12px; color: #92400e; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Tindakan / Maklum Balas</p>
+
+          <div style="margin-bottom: 14px;">
+            <p style="margin: 0 0 6px 0; font-size: 11px; color: #92400e; text-transform: uppercase;">Status Terkini</p>
+            <span style="display: inline-flex; align-items: center; gap: 6px; background: ${statusColor[tindakanStatus] || '#64748b'}18; color: ${statusColor[tindakanStatus] || '#64748b'}; border: 1px solid ${statusColor[tindakanStatus] || '#64748b'}40; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 700;">${statusIcon[tindakanStatus] || '⚪'} ${statusLabel[tindakanStatus] || tindakanStatus}</span>
+          </div>
+
+          <div>
+            <p style="margin: 0 0 6px 0; font-size: 11px; color: #92400e; text-transform: uppercase;">Catatan / Maklum Balas</p>
+            <div style="background: #ffffff; border: 1px solid #fcd34d; border-radius: 6px; padding: 12px 14px;">
+              <p style="margin: 0; font-size: 14px; color: #1e293b; line-height: 1.7; white-space: pre-wrap;">${tindakanComments}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${syorUrl}" style="display: inline-block; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: #ffffff; padding: 14px 36px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 15px; letter-spacing: 0.3px; box-shadow: 0 4px 12px rgba(249,115,22,0.35);">&#128196; Lihat Syor Penuh</a>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div style="margin-top: 20px; padding: 18px; text-align: center; color: #94a3b8; font-size: 12px;">
+        <p style="margin: 0 0 6px 0;">Email ini dihantar secara automatik oleh sistem STRiKe.</p>
+        <p style="margin: 0 0 12px 0;">Jangan balas email ini. Untuk pertanyaan, hubungi Administrator sistem.</p>
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 12px;">
+          <p style="margin: 0; font-weight: 600; color: #64748b;">Jemaah Nazir | Kementerian Pendidikan Malaysia</p>
+          <p style="margin: 6px 0 0 0; font-size: 11px;">© ${new Date().getFullYear()} STRiKe - Semua hak cipta terpelihara</p>
+        </div>
+      </div>
+
+    </body>
+    </html>
+  `
+
+  const sendSmtpEmail = new brevo.SendSmtpEmail()
+  sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STRiKe - Jemaah Nazir' }
+  sendSmtpEmail.to = [{ email: to, name: penyelarasName }]
+  sendSmtpEmail.subject = `🔔 Tindakan Baharu pada Syor: ${syorTitle.substring(0, 55)}${syorTitle.length > 55 ? '...' : ''}`
+  sendSmtpEmail.htmlContent = htmlContent
+
+  const data = await apiInstance.sendTransacEmail(sendSmtpEmail)
+  console.log('✅ Tindakan notification sent to:', to)
+  return { success: true, data }
 }
