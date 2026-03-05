@@ -440,17 +440,45 @@ export default function SyorDetailsPage() {
         // Determine department/jpn association based on role
         // admin/peneraju_pemeriksaan have no department/jpn (both null - allowed by updated constraint)
         const departmentId = user.role === 'penyelaras_bahagian' ? (user.department_id || null) : null
-        const jpnId = user.role === 'penyelaras_jpn' ? (user.jpn_id || null) : null
+        const jpnId = (user.role === 'penyelaras_jpn' || user.role === 'penyelaras_jnn') ? (user.jpn_id || null) : null
 
-        // Always INSERT a new record to preserve full history trail
-        const { error: statusError } = await supabase
-          .from('status_tracking')
-          .insert([{
-            syor_id: syorId,
-            department_id: departmentId,
-            jpn_id: jpnId,
-            ...statusData
-          }])
+        // Use UPSERT for penyelaras roles — unique constraint prevents duplicate INSERT
+        // for the same (syor_id, jpn_id) or (syor_id, department_id) combination.
+        // admin/peneraju_pemeriksaan use plain INSERT (null dept/jpn won't trigger constraint).
+        let statusError = null
+
+        if (jpnId) {
+          const { error } = await supabase
+            .from('status_tracking')
+            .upsert([{
+              syor_id: syorId,
+              department_id: null,
+              jpn_id: jpnId,
+              ...statusData
+            }], { onConflict: 'syor_id,jpn_id' })
+          statusError = error
+        } else if (departmentId) {
+          const { error } = await supabase
+            .from('status_tracking')
+            .upsert([{
+              syor_id: syorId,
+              department_id: departmentId,
+              jpn_id: null,
+              ...statusData
+            }], { onConflict: 'syor_id,department_id' })
+          statusError = error
+        } else {
+          // admin / peneraju_pemeriksaan — insert new record (no unique constraint on null pairs)
+          const { error } = await supabase
+            .from('status_tracking')
+            .insert([{
+              syor_id: syorId,
+              department_id: null,
+              jpn_id: null,
+              ...statusData
+            }])
+          statusError = error
+        }
 
         if (statusError) throw statusError
       }
