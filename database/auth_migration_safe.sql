@@ -207,10 +207,10 @@ INSERT INTO departments (id, name, code, contact_person, email, phone)
 VALUES (
     gen_random_uuid(),
     'Bahagian Perancangan dan Penyelidikan Dasar Pendidikan',
-    'BPPDP',
-    'Pengarah BPPDP',
-    'bppdp@moe.gov.my',
-    '03-8884-xxxx'
+    'EPRD',
+    'Ketua Bahagian EPRD',
+    'eprd@moe.gov.my',
+    '03-88841002'
 ) ON CONFLICT (code) DO NOTHING;
 
 -- Insert sample JPN (required for some users)

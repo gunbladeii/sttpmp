@@ -29,7 +29,7 @@ export const bahagianOptions = [
   { id: 'BPSH', name: 'Bahagian Pengurusan Sekolah Harian' },
   { id: 'BPSBP', name: 'Bahagian Pengurusan Sekolah Berasrama Penuh' },
   { id: 'BPSM', name: 'Bahagian Pengurusan Sumber Manusia' },
-  { id: 'BPDPDP', name: 'Bahagian Perancangan dan Penyelidikan Dasar Pendidikan' },
+  { id: 'EPRD', name: 'Bahagian Perancangan dan Penyelidikan Dasar Pendidikan' },
   { id: 'BPR', name: 'Bahagian Perolehan' },
   { id: 'BPKAUN', name: 'Bahagian Psikologi dan Kaunseling' },
   { id: 'BSKK', name: 'Bahagian Sukan, Kokurikulum dan Kesenian' },
