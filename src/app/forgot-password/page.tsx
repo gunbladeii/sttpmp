@@ -17,10 +17,11 @@ export default function ForgotPasswordPage() {
     setMessage("")
     // Call Supabase reset password API
     try {
+      const normalizedEmail = email.trim().toLowerCase()
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email: normalizedEmail })
       })
       const data = await res.json()
       if (data.success) {
@@ -51,7 +52,7 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-slate-600 bg-slate-800/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="nama@moe.gov.my"
+                placeholder="nama@moe.gov.my atau nama@ipgm.edu.my"
               />
             </div>
             <button

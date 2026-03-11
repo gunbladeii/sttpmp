@@ -9,6 +9,21 @@ if (process.env.NODE_ENV === 'development') {
 const apiInstance = new brevo.TransactionalEmailsApi()
 apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY || '')
 
+function getConfiguredSender() {
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.BREVO_FROM_EMAIL
+  const senderName = process.env.BREVO_SENDER_NAME || 'STTPMP - Jemaah Nazir'
+
+  if (!process.env.BREVO_API_KEY) {
+    throw new Error('BREVO_API_KEY tidak ditetapkan')
+  }
+
+  if (!senderEmail) {
+    throw new Error('BREVO_SENDER_EMAIL atau BREVO_FROM_EMAIL tidak ditetapkan')
+  }
+
+  return { senderEmail, senderName }
+}
+
 interface EmailRecipient {
   email: string
   name?: string
@@ -31,10 +46,7 @@ export async function sendEmail({
 }: SendEmailParams) {
   try {
     const sendSmtpEmail = new brevo.SendSmtpEmail()
-    
-    // Use BREVO_SENDER_EMAIL from env
-    const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com'
-    const senderName = process.env.BREVO_SENDER_NAME || 'STRiKe - Jemaah Nazir'
+    const { senderEmail, senderName } = getConfiguredSender()
     
     sendSmtpEmail.sender = { email: senderEmail, name: senderName }
     
@@ -74,6 +86,7 @@ export async function sendApprovalEmail({
   loginUrl,
 }: SendApprovalEmailParams) {
   try {
+    const { senderEmail, senderName } = getConfiguredSender()
     const roleNames: Record<string, string> = {
       admin: 'Administrator',
       peneraju_pemeriksaan: 'Peneraju Pemeriksaan',
@@ -182,7 +195,7 @@ export async function sendApprovalEmail({
       `
 
     const sendSmtpEmail = new brevo.SendSmtpEmail()
-    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STRiKe - Jemaah Nazir' }
+    sendSmtpEmail.sender = { email: senderEmail, name: senderName }
     sendSmtpEmail.to = [{ email: to, name: userName }]
     sendSmtpEmail.subject = '✅ Akaun STRiKe Anda Telah Diluluskan'
     sendSmtpEmail.htmlContent = htmlContent
@@ -209,8 +222,9 @@ export async function sendRejectionEmail({
   reason,
 }: SendRejectionEmailParams) {
   try {
+    const { senderEmail, senderName } = getConfiguredSender()
     const sendSmtpEmail = new brevo.SendSmtpEmail()
-    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STRiKe - Jemaah Nazir' }
+    sendSmtpEmail.sender = { email: senderEmail, name: senderName }
     sendSmtpEmail.to = [{ email: to, name: userName }]
     sendSmtpEmail.subject = '❌ Permohonan Akaun STRiKe'
     sendSmtpEmail.htmlContent = `
@@ -629,7 +643,7 @@ export async function sendDeadlineReminder({
       `
 
     const sendSmtpEmail = new brevo.SendSmtpEmail()
-    sendSmtpEmail.sender = { email: process.env.BREVO_FROM_EMAIL || 'noreply@sttpmp.com', name: 'STRiKe - Jemaah Nazir' }
+    sendSmtpEmail.sender = { email: senderEmail, name: senderName }
     sendSmtpEmail.to = [{ email: to, name: penyelarasName }]
     sendSmtpEmail.subject = '⏰ PERINGATAN: Syor Hampir Tamat Tempoh (3 Hari Lagi)'
     sendSmtpEmail.htmlContent = htmlContent

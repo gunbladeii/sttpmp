@@ -10,8 +10,9 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 export async function POST(request: Request) {
   try {
     const { email } = await request.json()
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : ''
 
-    if (!email || !validateEmail(email)) {
+    if (!normalizedEmail || !validateEmail(normalizedEmail)) {
       return NextResponse.json({ success: false, message: 'Email tidak sah.' }, { status: 400 })
     }
 
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('id, email, name')
-      .eq('email', email)
+      .ilike('email', normalizedEmail)
       .eq('is_active', true)
       .single()
 
@@ -110,11 +111,18 @@ export async function POST(request: Request) {
         console.error('Error message:', emailError.message)
         console.error('Error stack:', emailError.stack)
       }
-      // Still return success to not reveal if user exists
+
+      // Cleanup token if email failed so users don't collect unusable reset tokens.
+      await supabase
+        .from('password_reset_tokens')
+        .delete()
+        .eq('token', resetToken)
+
+      // Return generic service message (does not disclose whether user exists).
       return NextResponse.json({ 
-        success: true, 
-        message: 'Jika email wujud, arahan reset akan dihantar.' 
-      })
+        success: false,
+        message: 'Perkhidmatan emel sedang tergendala. Sila cuba semula sebentar lagi.'
+      }, { status: 503 })
     }
 
     return NextResponse.json({ 
