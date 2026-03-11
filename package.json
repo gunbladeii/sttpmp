@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "clean": "node -e \"require('fs').rmSync('.next',{ recursive:true, force:true })\"",
+    "dev": "npm run clean && next dev",
+    "dev:fast": "next dev",
     "dev:turbo": "next dev --turbopack",
     "build": "next build",
     "build:prod": "SKIP_ENV_VALIDATION=true next build",

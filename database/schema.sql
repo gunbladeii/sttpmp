@@ -56,8 +56,8 @@ CREATE TABLE users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     
-    -- Ensure only @moe.gov.my emails
-    CONSTRAINT check_moe_email CHECK (email LIKE '%@moe.gov.my'),
+    -- Ensure only @moe.gov.my or @ipgm.edu.my emails
+    CONSTRAINT check_moe_email CHECK (email LIKE '%@moe.gov.my' OR email LIKE '%@ipgm.edu.my'),
     
     -- Role-specific constraints
     CONSTRAINT check_role_assignment CHECK (
