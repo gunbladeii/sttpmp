@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "http://45.127.7.201/$1",
+      "permanent": false
+    }
+  ],
   "functions": {
     "app/api/**/*.js": {
       "maxDuration": 10
