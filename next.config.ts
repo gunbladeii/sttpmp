@@ -7,6 +7,21 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const nextConfig: NextConfig = {
+  // ↩️ REDIRECT: sttpmp.vercel.app → VPS (http://45.127.7.201/)
+  // Only activates on Vercel deployment, not on VPS itself.
+  async redirects() {
+    if (process.env.VERCEL) {
+      return [
+        {
+          source: '/:path*',
+          destination: 'http://45.127.7.201/:path*',
+          permanent: false, // 307 — senang nak tukar balik kalau perlu
+        },
+      ]
+    }
+    return []
+  },
+
   images: {
     remotePatterns: [
       {
